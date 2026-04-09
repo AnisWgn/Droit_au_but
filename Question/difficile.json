@@ -1,0 +1,68 @@
+[
+  {
+    "id": "d1",
+    "question": "Quel article du RGPD pose le principe de « privacy by design » et « privacy by default » ?",
+    "choices": [
+      "Article 25",
+      "Article 5",
+      "Article 17",
+      "Article 82"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": "d2",
+    "question": "Le mécanisme des « Binding Corporate Rules » (BCR) concerne principalement :",
+    "choices": [
+      "Les transferts de données au sein d'un groupe multinational vers des pays tiers",
+      "Les cookies de mesure d'audience uniquement",
+      "La conservation des logs serveur 24 h",
+      "L'anonymisation irréversible systématique"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": "d3",
+    "question": "Une autorité de contrôle (ex. CNIL) peut prononcer une sanction administrative jusqu'à :",
+    "choices": [
+      "Jusqu'à 20 millions d'euros ou 4 % du CA annuel mondial (le plus élevé)",
+      "Plafond fixe de 100 000 € dans tous les cas",
+      "Uniquement un avertissement public",
+      "10 % du chiffre d'affaires français seulement"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": "d4",
+    "question": "La base légale « intérêt légitime » nécessite notamment :",
+    "choices": [
+      "Un équilibre entre l'intérêt du responsable et les droits des personnes",
+      "Uniquement le consentement explicite écrit",
+      "D'être une association à but non lucratif",
+      "L'absence totale de prospection commerciale"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": "d5",
+    "question": "Un sous-traitant, par rapport au responsable du traitement :",
+    "choices": [
+      "Traite des données pour le compte du responsable selon ses instructions",
+      "Définit seul les finalités du traitement",
+      "Est toujours un particulier bénévole",
+      "N'a aucun obligation contractuelle écrite"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": "d6",
+    "question": "Le « Privacy Shield » (historique) concernait les transferts UE vers :",
+    "choices": [
+      "Les États-Unis (cadre désormais invalidé / remplacé par d'autres mécanismes)",
+      "Le Canada uniquement",
+      "La Suisse exclusivement",
+      "Le Royaume-Uni après le Brexit uniquement"
+    ],
+    "correctIndex": 0
+  }
+]

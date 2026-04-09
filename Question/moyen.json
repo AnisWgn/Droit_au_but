@@ -1,0 +1,68 @@
+[
+  {
+    "id": "m1",
+    "question": "Quel est le rôle principal d'un DPO (Délégué à la protection des données) ?",
+    "choices": [
+      "Informer et conseiller l'organisme sur ses obligations RGPD",
+      "Gérer uniquement le parc informatique",
+      "Signer les contrats clients",
+      "Remplacer le PDG en son absence"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": "m2",
+    "question": "En cas de violation de données présentant un risque pour les personnes, sous quel délai faut-il en général notifier la CNIL (sauf exception) ?",
+    "choices": [
+      "72 heures après avoir pris connaissance de la violation",
+      "30 jours",
+      "7 jours ouvrés",
+      "Un an maximum"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": "m3",
+    "question": "La « portabilité » des données permet au titulaire de :",
+    "choices": [
+      "Recevoir ses données dans un format structuré et les transmettre à un autre responsable",
+      "Supprimer toutes les copies chez les tiers sans preuve",
+      "Interdire toute analyse statistique",
+      "Exporter uniquement en PDF papier"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": "m4",
+    "question": "Le consentement au sens RGPD doit être :",
+    "choices": [
+      "Libre, spécifique, éclairé et univoque",
+      "Implicite dès l'entrée sur un site",
+      "Donné une fois pour toutes à vie",
+      "Remplacé par les conditions générales de vente"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": "m5",
+    "question": "Une « analyse d'impact » (PIA / AIPD) est surtout pertinente lorsque :",
+    "choices": [
+      "Le traitement est susceptible d'engendrer un risque élevé pour les droits et libertés",
+      "L'entreprise a moins de 5 salariés",
+      "Les données sont anonymes à 100 % sans aucun doute",
+      "Le site n'a pas de formulaire de contact"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": "m6",
+    "question": "Le responsable du traitement est :",
+    "choices": [
+      "Celui qui détermine les finalités et les moyens du traitement",
+      "Toujours l'hébergeur du site",
+      "Le salarié qui saisit les données",
+      "Uniquement la CNIL"
+    ],
+    "correctIndex": 0
+  }
+]

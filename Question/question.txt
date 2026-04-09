@@ -1,0 +1,31 @@
+Facile :
+
+1.C'est quoi une donnée à caractère personnel
+Données à caractère personnel ce sont toutes les 
+données permettant l’identification d’une personne
+(pas seulement son nom mais aussi sa voix, son image, 
+ses empreintes génétiques ou un n° d’identification)
+
+2.Qu'elle loi met en place la protection des données personnelles
+La loi qui met en place la protection est la loi Informatique et
+Libertés du 6 janvier 1978
+
+3.Depuis quand le RGPD est entré en rigueur
+Le RGPD est entré en rigueur depuis le 25 mai 2018
+
+4.Selon la CNIL c'est quoi un traitement de données à caractère personnel
+Un traitement de données à caractère personnel est toutes opération
+ou tous ensemble d'opération portant sur de telle données
+
+5.Selon la CNIL que peut-on qualifier de traitement de données à caractère personnel
+La collecte, l'enregistrement, l'organisation, la conservation, l'adaptation ou 
+la modification, l'extraction, la consultation, l'utilisation, la communication 
+par transmission, diffusion, le rapprochement ou l'interconnexion, le verrouillage, 
+l'effacement ou la desctruction.
+
+6.Qu'elle sont les doits des personnes
+Le consentement, la transparence, le droit d'accès de rectification, le droit à l'oubli
+la portabilité, la minimisation, la sécurité, doit à la notification
+Moyen : 
+
+Difficile : 

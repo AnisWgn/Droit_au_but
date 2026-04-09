@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Droit au But</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="pitch">
+      <header class="top">
+        <div class="brand">
+          <span class="brand__title">Droit au But</span>
+          <span class="brand__tag">Culture générale · droit &amp; économie</span>
+        </div>
+        <button type="button" class="btn btn--ghost" id="btn-rules" aria-expanded="false">
+          Règles
+        </button>
+      </header>
+
+      <aside class="rules-panel" id="rules-panel" hidden>
+        <h2>Règles</h2>
+        <ul>
+          <li>Atteignez <strong>exactement</strong> la case 100 pour gagner.</li>
+          <li>
+            <strong>Simple</strong> : +2 si réussi, −1 si échec.
+            <strong>Moyen</strong> : +5 / −2.
+            <strong>Compliqué</strong> : +10 / −5.
+          </li>
+          <li>
+            <strong>Panne</strong> : deux échecs consécutifs en mode Compliqué → vous ne pouvez plus jouer
+            qu’en Simple jusqu’à une réussite.
+          </li>
+          <li>
+            <strong>Radars</strong> : cases 10, 20, … 90 — une question bonus ; en cas d’échec, recul de 2
+            cases (ralentissement).
+          </li>
+          <li>Si une bonne réponse ferait dépasser 100, vous ne bougez pas.</li>
+        </ul>
+      </aside>
+
+      <main class="main">
+        <section class="card card--welcome" id="screen-welcome">
+          <h1>Rejoindre la course</h1>
+          <label class="field">
+            <span>Votre pseudo</span>
+            <input type="text" id="input-name" maxlength="24" placeholder="Ex. Alex" autocomplete="nickname" />
+          </label>
+          <div class="actions">
+            <button type="button" class="btn btn--primary" id="btn-create">Créer un salon</button>
+          </div>
+          <hr class="sep" />
+          <label class="field">
+            <span>Code du salon</span>
+            <input
+              type="text"
+              id="input-code"
+              maxlength="6"
+              placeholder="Ex. K7NP2M"
+              autocomplete="off"
+              style="text-transform: uppercase"
+            />
+          </label>
+          <div class="actions">
+            <button type="button" class="btn btn--secondary" id="btn-join">Rejoindre</button>
+          </div>
+          <p class="hint" id="welcome-error" role="alert"></p>
+        </section>
+
+        <section class="card card--lobby hidden" id="screen-lobby">
+          <div class="lobby-head">
+            <h2>Salon</h2>
+            <div class="code-box">
+              <span class="code-box__label">Code</span>
+              <span class="code-box__value" id="lobby-code">———</span>
+              <button type="button" class="btn btn--small" id="btn-copy">Copier</button>
+            </div>
+          </div>
+          <ul class="player-list" id="lobby-players"></ul>
+          <p class="hint" id="lobby-role"></p>
+          <div class="actions">
+            <button type="button" class="btn btn--primary hidden" id="btn-start">Lancer la partie</button>
+          </div>
+        </section>
+
+        <section class="card card--game hidden" id="screen-game">
+          <div class="game-head">
+            <h2>Plateau</h2>
+            <p class="turn-line" id="turn-line"></p>
+          </div>
+
+          <div class="board-wrap">
+            <div class="board" id="board" aria-label="Plateau de 0 à 100"></div>
+          </div>
+
+          <div class="winner-overlay hidden" id="winner-overlay">
+            <div class="winner-card">
+              <h3 id="winner-title">Victoire !</h3>
+              <p id="winner-name"></p>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <aside id="play-dock" class="play-dock hidden" aria-label="Risque et questions">
+        <div class="play-dock__inner">
+          <div class="play-dock__bar">
+            <button
+              type="button"
+              class="play-dock__toggle"
+              id="play-dock-toggle"
+              aria-expanded="true"
+              aria-controls="play-dock-body"
+              title="Réduire ou agrandir le panneau"
+            >
+              <span class="play-dock__chevron" aria-hidden="true"></span>
+            </button>
+            <div class="play-dock__titles">
+              <span class="play-dock__title">Risque &amp; quiz</span>
+              <span class="play-dock__summary" id="play-dock-summary"></span>
+            </div>
+          </div>
+          <div
+            id="play-dock-feedback"
+            class="play-dock__feedback hidden"
+            role="status"
+            aria-live="assertive"
+          ></div>
+          <div class="play-dock__body" id="play-dock-body">
+            <div class="panne-banner hidden" id="panne-banner">
+              En panne : réussissez une question en mode Simple pour repartir.
+            </div>
+
+            <div class="difficulty" id="difficulty-panel">
+              <span class="difficulty__label">Choisir le risque</span>
+              <div class="difficulty__buttons">
+                <button type="button" class="btn btn--diff btn--simple" data-difficulty="simple">
+                  Simple <small>+2 / −1</small>
+                </button>
+                <button type="button" class="btn btn--diff btn--moyen" data-difficulty="moyen">
+                  Moyen <small>+5 / −2</small>
+                </button>
+                <button type="button" class="btn btn--diff btn--hard" data-difficulty="compliqué">
+                  Compliqué <small>+10 / −5</small>
+                </button>
+              </div>
+            </div>
+
+            <div class="question-panel hidden" id="question-panel">
+              <p class="question-meta" id="question-meta"></p>
+              <p class="question-text" id="question-text"></p>
+              <div class="answer-result hidden" id="answer-result" role="status" aria-live="polite"></div>
+              <div class="choices" id="question-choices"></div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <footer class="foot">
+        <span>SIO2 · Droit au But · salon par code</span>
+      </footer>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

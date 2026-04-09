@@ -1,0 +1,68 @@
+[
+  {
+    "id": "s1",
+    "question": "Qu'est-ce qu'une donnée à caractère personnel ?",
+    "choices": [
+      "Toute donnée permettant d'identifier une personne directement ou indirectement",
+      "Uniquement le nom et le prénom",
+      "Seulement les données stockées sur un serveur",
+      "Les données publiques sur internet"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": "s2",
+    "question": "Quelle loi française encadre la protection des données personnelles ?",
+    "choices": [
+      "Loi Informatique et Libertés du 6 janvier 1978",
+      "Loi Hadopi",
+      "Code du travail",
+      "Loi sur le commerce électronique uniquement"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": "s3",
+    "question": "Depuis quand le RGPD est-il applicable ?",
+    "choices": [
+      "25 mai 2018",
+      "1er janvier 2017",
+      "24 mai 2016",
+      "25 mai 2020"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": "s4",
+    "question": "Selon la CNIL, qu'est-ce qu'un « traitement » de données personnelles ?",
+    "choices": [
+      "Toute opération sur des données (collecte, conservation, consultation, etc.)",
+      "Uniquement la vente de données",
+      "Seulement le stockage sur cloud",
+      "La destruction accidentelle de fichiers"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": "s5",
+    "question": "Parmi les droits des personnes, lequel est associé au « droit à l'oubli » ?",
+    "choices": [
+      "Droit à l'effacement des données",
+      "Droit de vote numérique",
+      "Droit à une connexion gratuite",
+      "Droit de copier tout site web"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": "s6",
+    "question": "Le principe de minimisation des données signifie :",
+    "choices": [
+      "Ne collecter que les données strictement nécessaires",
+      "Collecter le maximum pour mieux analyser",
+      "Limiter l'accès à une seule personne dans l'entreprise",
+      "Réduire la taille des fichiers image"
+    ],
+    "correctIndex": 0
+  }
+]
