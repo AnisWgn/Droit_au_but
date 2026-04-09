@@ -1,15 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import {
-  insertCoin,
-  myPlayer,
-  isHost,
-  getRoomCode,
-  useMultiplayerState,
-  usePlayersList,
-  useIsHost,
-} from 'playroomkit';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 
@@ -21,448 +12,492 @@ import WinScreen from './ui/WinScreen';
 import { Question, PlayerInfo } from '@/types/game';
 import { getQuestion } from '@/lib/questions';
 import { DIFFICULTY_CONFIG, isRadarCell, advanceTurn, PLAYER_COLORS } from '@/lib/gameLogic';
+import { getSocket, disconnectSocket } from '@/lib/socket';
+import type { Socket } from 'socket.io-client';
 
-// Chargement dynamique de la scène Three.js (client uniquement)
-const GameScene = dynamic(() => import('./three/Scene'), { ssr: false });
-
-// ─── Types utilitaires ────────────────────────────────────────────────────────
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 type Difficulty = 'simple' | 'moyen' | 'compliqué';
+type GameMode = 'menu' | 'solo' | 'multi';
 
-interface PendingAnswer {
-  questionId: string;
-  choiceIndex: number;
+interface RoomState {
+  code: string;
+  phase: 'lobby' | 'playing' | 'finished';
+  hostId: string;
+  winnerId: string | null;
+  currentPlayerIndex: number;
+  activeQuestion: Question | null;
+  players: PlayerInfo[];
 }
 
-// ─── Composant principal ──────────────────────────────────────────────────────
+// ─── Mock player pour le mode solo ───────────────────────────────────────────
 
-export default function GameBoard() {
-  const [initialized, setInitialized] = useState(false);
-  const [setupError, setSetupError] = useState<string | null>(null);
-  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
+class MockPlayer {
+  id: string;
+  private _s: Record<string, unknown> = {};
+  private _cb: () => void;
 
-  // État partagé entre tous les joueurs (Playroom Kit)
-  const [gamePhase, setGamePhase] = useMultiplayerState('gamePhase', 'lobby');
-  const [currentPlayerIndex, setCurrentPlayerIndex] = useMultiplayerState('currentPlayerIndex', 0);
-  const [activeQuestion, setActiveQuestion] = useMultiplayerState('activeQuestion', null);
-  const [winnerId, setWinnerId] = useMultiplayerState('winnerId', null);
-  const [lastQuestionIds, setLastQuestionIds] = useMultiplayerState('lastQuestionIds', []);
-
-  const players = usePlayersList(true);
-  const amHost = useIsHost();
-
-  // ─── Initialisation Playroom ────────────────────────────────────────────────
-
-  useEffect(() => {
-    insertCoin({
-      skipLobby: false,
-      defaultPlayerStates: { position: 0, panne: false, consecutiveCompliqué: 0 },
-    })
-      .then(() => {
-        setInitialized(true);
-      })
-      .catch((err: unknown) => {
-        console.error(err);
-        setSetupError('Erreur de connexion à Playroom Kit. Vérifie ta connexion internet.');
-      });
-  }, []);
-
-  // ─── Logique hôte : gestion des événements de tour ─────────────────────────
-
-  const handlePickDifficulty = useCallback(
-    async (playerObj: ReturnType<typeof myPlayer>, difficulty: Difficulty) => {
-      if (!playerObj) return;
-      if (playerObj.getState('panne') && difficulty !== 'simple') return;
-
-      const excluded = (lastQuestionIds as string[]).slice(-8);
-      const q = await getQuestion(difficulty, excluded);
-      if (!q) return;
-
-      const updatedIds = [...(lastQuestionIds as string[]), q.id].slice(-20);
-      setLastQuestionIds(updatedIds);
-
-      setActiveQuestion({
-        ...q,
-        kind: 'normal',
-        forPlayerId: playerObj.id,
-      } as Question);
-    },
-    [lastQuestionIds, setLastQuestionIds, setActiveQuestion]
-  );
-
-  const handleRadar = useCallback(
-    async (
-      playerObj: ReturnType<typeof myPlayer>,
-      currentIdx: number,
-      playersLen: number
-    ) => {
-      if (!playerObj) return;
-      const excluded = (lastQuestionIds as string[]).slice(-8);
-      const q = await getQuestion('simple', excluded);
-
-      if (!q) {
-        setActiveQuestion(null);
-        setCurrentPlayerIndex(advanceTurn(currentIdx, playersLen));
-        return;
-      }
-
-      const updatedIds = [...(lastQuestionIds as string[]), q.id].slice(-20);
-      setLastQuestionIds(updatedIds);
-
-      setActiveQuestion({
-        ...q,
-        kind: 'radar',
-        forPlayerId: playerObj.id,
-      } as Question);
-    },
-    [lastQuestionIds, setLastQuestionIds, setActiveQuestion, setCurrentPlayerIndex]
-  );
-
-  const handleAnswer = useCallback(
-    async (
-      playerObj: ReturnType<typeof myPlayer>,
-      choiceIndex: number,
-      question: Question,
-      currentIdx: number,
-      playersLen: number
-    ) => {
-      if (!playerObj) return;
-
-      const correct = choiceIndex === question.correctIndex;
-      const diff = DIFFICULTY_CONFIG[question.difficulty as keyof typeof DIFFICULTY_CONFIG];
-
-      // Feedback visible par le joueur via son état local
-      playerObj.setState('feedback', { correct, timestamp: Date.now() });
-
-      // ── Case Radar ──────────────────────────────────────────────────────────
-      if (question.kind === 'radar') {
-        if (correct) {
-          setActiveQuestion(null);
-          setCurrentPlayerIndex(advanceTurn(currentIdx, playersLen));
-        } else {
-          const pos = (playerObj.getState('position') as number) ?? 0;
-          const newPos = Math.max(0, pos - 2);
-          playerObj.setState('position', newPos);
-
-          if (isRadarCell(newPos)) {
-            await handleRadar(playerObj, currentIdx, playersLen);
-          } else {
-            setActiveQuestion(null);
-            setCurrentPlayerIndex(advanceTurn(currentIdx, playersLen));
-          }
-        }
-        return;
-      }
-
-      // ── Question normale ────────────────────────────────────────────────────
-      if (correct) {
-        const panne = playerObj.getState('panne') as boolean;
-        if (panne && question.difficulty === 'simple') playerObj.setState('panne', false);
-        if (question.difficulty === 'compliqué') playerObj.setState('consecutiveCompliqué', 0);
-
-        const pos = (playerObj.getState('position') as number) ?? 0;
-        const next = pos + diff.advance;
-
-        if (next > 100) {
-          // Trop loin : passe le tour sans bouger
-          setActiveQuestion(null);
-          setCurrentPlayerIndex(advanceTurn(currentIdx, playersLen));
-          return;
-        }
-
-        playerObj.setState('position', next);
-
-        if (next === 100) {
-          setWinnerId(playerObj.id);
-          setGamePhase('finished');
-          setActiveQuestion(null);
-          return;
-        }
-
-        if (isRadarCell(next)) {
-          await handleRadar(playerObj, currentIdx, playersLen);
-          return;
-        }
-      } else {
-        if (question.difficulty === 'compliqué') {
-          const consec = ((playerObj.getState('consecutiveCompliqué') as number) ?? 0) + 1;
-          playerObj.setState('consecutiveCompliqué', consec);
-          if (consec >= 2) {
-            playerObj.setState('panne', true);
-            playerObj.setState('consecutiveCompliqué', 0);
-          }
-        } else {
-          playerObj.setState('consecutiveCompliqué', 0);
-        }
-
-        const pos = (playerObj.getState('position') as number) ?? 0;
-        const newPos = Math.max(0, pos - diff.back);
-        playerObj.setState('position', newPos);
-
-        if (isRadarCell(newPos)) {
-          await handleRadar(playerObj, currentIdx, playersLen);
-          return;
-        }
-      }
-
-      setActiveQuestion(null);
-      setCurrentPlayerIndex(advanceTurn(currentIdx, playersLen));
-    },
-    [
-      setActiveQuestion,
-      setCurrentPlayerIndex,
-      setWinnerId,
-      setGamePhase,
-      handleRadar,
-    ]
-  );
-
-  // ─── Hôte : surveille les états joueurs pour piloter la partie ─────────────
-
-  useEffect(() => {
-    if (!amHost || !initialized || gamePhase !== 'playing' || winnerId) return;
-
-    const currentPlayer = players[currentPlayerIndex as number];
-    if (!currentPlayer) return;
-
-    // Joueur a choisi une difficulté
-    const pickedDifficulty = currentPlayer.getState('pickedDifficulty') as Difficulty | null;
-    if (pickedDifficulty && !activeQuestion) {
-      currentPlayer.setState('pickedDifficulty', null);
-      handlePickDifficulty(currentPlayer, pickedDifficulty);
-    }
-
-    // Joueur a soumis une réponse
-    const submittedAnswer = currentPlayer.getState('submittedAnswer') as PendingAnswer | null;
-    if (
-      submittedAnswer &&
-      activeQuestion &&
-      submittedAnswer.questionId === (activeQuestion as Question).id
-    ) {
-      currentPlayer.setState('submittedAnswer', null);
-      handleAnswer(
-        currentPlayer,
-        submittedAnswer.choiceIndex,
-        activeQuestion as Question,
-        currentPlayerIndex as number,
-        players.length
-      );
-    }
-  }, [
-    players,
-    currentPlayerIndex,
-    activeQuestion,
-    amHost,
-    initialized,
-    gamePhase,
-    winnerId,
-    handlePickDifficulty,
-    handleAnswer,
-  ]);
-
-  // ─── Données joueurs formatées pour l'UI et la 3D ──────────────────────────
-
-  const gamePlayers: PlayerInfo[] = players.map((p, i) => ({
-    id: p.id,
-    name: p.getProfile().name ?? `Joueur ${i + 1}`,
-    position: (p.getState('position') as number) ?? 0,
-    panne: (p.getState('panne') as boolean) ?? false,
-    color: p.getProfile().color?.hexString ?? PLAYER_COLORS[i % PLAYER_COLORS.length],
-  }));
-
-  const me = myPlayer();
-  const currentPlayer = players[currentPlayerIndex as number];
-  const isMyTurn = !!me && !!currentPlayer && me.id === currentPlayer.id;
-
-  // ─── Rendu : erreur de configuration ───────────────────────────────────────
-
-  if (setupError) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-[#0a0a1a] p-8">
-        <div className="max-w-md w-full bg-red-900/40 border border-red-500/40 rounded-2xl p-8 text-center">
-          <p className="text-4xl mb-4">⚠️</p>
-          <h2 className="text-white font-bold text-xl mb-3">Erreur de connexion</h2>
-          <p className="text-red-300 text-sm leading-relaxed">{setupError}</p>
-        </div>
-      </div>
-    );
+  constructor(id: string, color: string, name: string, cb: () => void) {
+    this.id = id;
+    this._cb = cb;
+    this._s = { position: 0, panne: false, 'consecutiveCompliqué': 0, _name: name, _color: color };
   }
+  get(k: string) { return this._s[k] ?? null; }
+  set(k: string, v: unknown) { this._s[k] = v; this._cb(); }
+  toInfo(): PlayerInfo {
+    return { id: this.id, name: this._s._name as string, position: (this._s.position as number) ?? 0, panne: (this._s.panne as boolean) ?? false, color: this._s._color as string };
+  }
+}
 
-  // ─── Rendu : chargement ─────────────────────────────────────────────────────
+// ─── Scene 3D (lazy) + Error Boundary ────────────────────────────────────────
 
-  if (!initialized) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-[#0a0a1a]">
-        <motion.div
-          animate={{ opacity: [0.4, 1, 0.4] }}
-          transition={{ repeat: Infinity, duration: 1.5 }}
-          className="text-white text-2xl font-bold"
+const GameScene = dynamic(() => import('./three/Scene'), { ssr: false });
+
+class SceneErrorBoundary extends React.Component<{ children: React.ReactNode }, { error: Error | null }> {
+  state: { error: Error | null } = { error: null };
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return <div className="flex items-center justify-center h-full bg-[#1e2638] text-white/50 text-xs p-4 text-center"><p>Erreur scène 3D : {this.state.error.message}</p></div>;
+    }
+    return this.props.children;
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Menu principal — choix Solo / Multijoueur
+// ═════════════════════════════════════════════════════════════════════════════
+
+function MainMenu({ onMode }: { onMode: (m: GameMode) => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center h-screen bg-[#1e2638] gap-6">
+      <h1 className="text-white text-3xl font-bold tracking-tight">Droit au But</h1>
+      <p className="text-white/40 text-sm">Choisis ton mode de jeu</p>
+      <div className="flex gap-4">
+        <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+          onClick={() => onMode('solo')}
+          className="glass-strong rounded-2xl px-8 py-5 text-center min-w-[160px]"
         >
-          Connexion au salon...
-        </motion.div>
+          <p className="text-white font-semibold text-lg mb-1">Solo</p>
+          <p className="text-white/35 text-xs">Jouer localement</p>
+        </motion.button>
+        <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+          onClick={() => onMode('multi')}
+          className="glass-strong rounded-2xl px-8 py-5 text-center min-w-[160px]"
+        >
+          <p className="text-white font-semibold text-lg mb-1">Multijoueur</p>
+          <p className="text-white/35 text-xs">Socket.IO</p>
+        </motion.button>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
-  // ─── Rendu : jeu ───────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+// Mode Solo (standalone, sans réseau)
+// ═════════════════════════════════════════════════════════════════════════════
+
+function SoloGame({ onBack }: { onBack: () => void }) {
+  const [tick, setTick] = useState(0);
+  const bump = useCallback(() => setTick((t) => t + 1), []);
+  const mockRef = useRef<MockPlayer>(new MockPlayer('local-1', PLAYER_COLORS[0], 'Joueur 1', bump));
+  const mock = mockRef.current;
+
+  const [gamePhase, setGamePhase] = useState<'lobby' | 'playing' | 'finished'>('lobby');
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [activeQ, setActiveQ] = useState<Question | null>(null);
+  const [winnerId, setWinnerId] = useState<string | null>(null);
+  const [lastQIds, setLastQIds] = useState<string[]>([]);
+  const [cameraFixed, setCameraFixed] = useState(false);
+
+  void tick;
+  const gamePlayers: PlayerInfo[] = [mock.toInfo()];
+  const isMyTurn = currentIdx === 0;
+
+  const handlePick = useCallback(async (difficulty: Difficulty) => {
+    if (mock.get('panne') && difficulty !== 'simple') return;
+    const excluded = lastQIds.slice(-8);
+    const q = await getQuestion(difficulty, excluded);
+    if (!q) return;
+    setLastQIds((ids) => [...ids, q.id].slice(-20));
+    setActiveQ({ ...q, kind: 'normal', forPlayerId: mock.id } as Question);
+  }, [mock, lastQIds]);
+
+  const handleRadar = useCallback(async () => {
+    const q = await getQuestion('simple', lastQIds.slice(-8));
+    if (!q) { setActiveQ(null); setCurrentIdx((c) => advanceTurn(c, 1)); return; }
+    setLastQIds((ids) => [...ids, q.id].slice(-20));
+    setActiveQ({ ...q, kind: 'radar', forPlayerId: mock.id } as Question);
+  }, [mock, lastQIds]);
+
+  const handleAnswer = useCallback(async (choiceIndex: number, question: Question) => {
+    const correct = choiceIndex === question.correctIndex;
+    const diff = DIFFICULTY_CONFIG[question.difficulty as keyof typeof DIFFICULTY_CONFIG];
+    mock.set('feedback', { correct, timestamp: Date.now() });
+
+    if (question.kind === 'radar') {
+      if (correct) { setActiveQ(null); setCurrentIdx((c) => advanceTurn(c, 1)); }
+      else {
+        const pos = (mock.get('position') as number) ?? 0;
+        const np = Math.max(0, pos - 2);
+        mock.set('position', np);
+        if (isRadarCell(np)) await handleRadar(); else { setActiveQ(null); setCurrentIdx((c) => advanceTurn(c, 1)); }
+      }
+      return;
+    }
+
+    if (correct) {
+      if (mock.get('panne') && question.difficulty === 'simple') mock.set('panne', false);
+      if (question.difficulty === 'compliqué') mock.set('consecutiveCompliqué', 0);
+      const pos = (mock.get('position') as number) ?? 0;
+      const next = pos + diff.advance;
+      if (next > 100) { setActiveQ(null); setCurrentIdx((c) => advanceTurn(c, 1)); return; }
+      mock.set('position', next);
+      if (next === 100) { setWinnerId(mock.id); setGamePhase('finished'); setActiveQ(null); return; }
+      if (isRadarCell(next)) { await handleRadar(); return; }
+    } else {
+      if (question.difficulty === 'compliqué') {
+        const c = ((mock.get('consecutiveCompliqué') as number) ?? 0) + 1;
+        mock.set('consecutiveCompliqué', c);
+        if (c >= 2) { mock.set('panne', true); mock.set('consecutiveCompliqué', 0); }
+      } else { mock.set('consecutiveCompliqué', 0); }
+      const pos = (mock.get('position') as number) ?? 0;
+      const np = Math.max(0, pos - diff.back);
+      mock.set('position', np);
+      if (isRadarCell(np)) { await handleRadar(); return; }
+    }
+    setActiveQ(null);
+    setCurrentIdx((c) => advanceTurn(c, 1));
+  }, [mock, handleRadar]);
 
   return (
-    <div className="relative w-full h-screen bg-[#0a0a1a] overflow-hidden">
-      {/* Scène 3D */}
-      <GameScene
-        players={gamePlayers}
-        currentPlayerIndex={currentPlayerIndex as number}
-      />
+    <GameUI
+      gamePlayers={gamePlayers}
+      currentPlayerIndex={currentIdx}
+      gamePhase={gamePhase}
+      activeQuestion={activeQ}
+      winnerId={winnerId}
+      isMyTurn={isMyTurn}
+      myId={mock.id}
+      amHost
+      roomCode={null}
+      cameraFixed={cameraFixed}
+      setCameraFixed={setCameraFixed}
+      panne={(mock.get('panne') as boolean) ?? false}
+      onStart={() => {
+        mock.set('position', 0); mock.set('panne', false); mock.set('consecutiveCompliqué', 0);
+        setCurrentIdx(0); setActiveQ(null); setWinnerId(null); setLastQIds([]);
+        setGamePhase('playing');
+      }}
+      onPickDifficulty={(d) => handlePick(d as Difficulty)}
+      onAnswer={(ci) => activeQ && handleAnswer(ci, activeQ)}
+      onRestart={() => {
+        mock.set('position', 0); mock.set('panne', false); mock.set('consecutiveCompliqué', 0);
+        setCurrentIdx(0); setActiveQ(null); setWinnerId(null); setLastQIds([]);
+        setGamePhase('playing');
+      }}
+      onQuit={onBack}
+    />
+  );
+}
 
-      {/* ── Overlays UI ───────────────────────────────────────────────────── */}
-      <div className="absolute inset-0 pointer-events-none">
+// ═════════════════════════════════════════════════════════════════════════════
+// Mode Multijoueur (Socket.IO)
+// ═════════════════════════════════════════════════════════════════════════════
 
-        {/* Liste des joueurs */}
-        <PlayerList
-          players={gamePlayers}
-          currentPlayerIndex={currentPlayerIndex as number}
-          myPlayerId={me?.id ?? ''}
+function MultiGame({ onBack }: { onBack: () => void }) {
+  const [screen, setScreen] = useState<'connect' | 'game'>('connect');
+  const [name, setName] = useState('');
+  const [joinCode, setJoinCode] = useState('');
+  const [myId, setMyId] = useState<string | null>(null);
+  const [room, setRoom] = useState<RoomState | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [cameraFixed, setCameraFixed] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const socketRef = useRef<Socket | null>(null);
+
+  useEffect(() => {
+    const s = getSocket();
+    socketRef.current = s;
+
+    s.on('joined', ({ playerId }: { code: string; playerId: string }) => {
+      setMyId(playerId);
+      setScreen('game');
+      setConnecting(false);
+      setError(null);
+    });
+
+    s.on('roomState', (state: RoomState) => {
+      setRoom(state);
+    });
+
+    s.on('gameError', ({ message }: { message: string }) => {
+      setError(message);
+      setConnecting(false);
+    });
+
+    s.on('connect_error', () => {
+      setError('Impossible de se connecter au serveur. Lance `node server.js` (port 3333).');
+      setConnecting(false);
+    });
+
+    s.connect();
+
+    return () => {
+      s.off('joined');
+      s.off('roomState');
+      s.off('gameError');
+      s.off('connect_error');
+      disconnectSocket();
+    };
+  }, []);
+
+  const emit = useCallback((ev: string, data?: Record<string, unknown>) => {
+    socketRef.current?.emit(ev, data);
+  }, []);
+
+  const handleCreate = () => {
+    if (!name.trim()) { setError('Entre un pseudo.'); return; }
+    setConnecting(true);
+    setError(null);
+    emit('createRoom', { name: name.trim() });
+  };
+
+  const handleJoin = () => {
+    if (!name.trim()) { setError('Entre un pseudo.'); return; }
+    if (!joinCode.trim()) { setError('Entre un code de salon.'); return; }
+    setConnecting(true);
+    setError(null);
+    emit('joinRoom', { code: joinCode.trim().toUpperCase(), name: name.trim() });
+  };
+
+  // Écran de connexion
+  if (screen === 'connect' || !room || !myId) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-[#1e2638] gap-5 p-8">
+        <h2 className="text-white text-2xl font-bold">Multijoueur</h2>
+        <p className="text-white/35 text-xs">Serveur Socket.IO sur le port 3333</p>
+
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Ton pseudo"
+          maxLength={24}
+          className="w-64 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-blue-500/40"
         />
 
-        {/* Barre du haut : code salon + bouton quitter */}
-        <div className="absolute top-4 right-4 flex items-center gap-3">
-          {getRoomCode() && (
-            <div className="bg-black/50 backdrop-blur border border-white/10 rounded-xl px-4 py-2 text-white/70 text-sm font-mono">
-              Salon : <span className="text-white font-bold tracking-widest">{getRoomCode()}</span>
-            </div>
-          )}
-          <motion.button
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.93 }}
-            onClick={() => setShowQuitConfirm(true)}
-            className="pointer-events-auto bg-black/50 backdrop-blur border border-white/10 hover:border-red-400/40 hover:bg-red-900/30 rounded-xl px-4 py-2 text-white/70 hover:text-red-300 text-sm font-semibold transition-colors flex items-center gap-2"
+        <div className="flex gap-3 w-64">
+          <motion.button whileTap={{ scale: 0.97 }} onClick={handleCreate} disabled={connecting}
+            className="flex-1 py-2.5 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white font-semibold text-sm rounded-xl transition-colors"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-            Quitter
+            Créer
           </motion.button>
+          <div className="flex flex-1 gap-1.5">
+            <input
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+              placeholder="CODE"
+              maxLength={6}
+              className="w-20 px-2.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-mono text-center placeholder:text-white/25 focus:outline-none focus:border-blue-500/40"
+            />
+            <motion.button whileTap={{ scale: 0.97 }} onClick={handleJoin} disabled={connecting}
+              className="flex-1 py-2.5 bg-white/10 hover:bg-white/15 disabled:opacity-50 text-white font-semibold text-sm rounded-xl transition-colors"
+            >
+              Rejoindre
+            </motion.button>
+          </div>
         </div>
 
-        {/* Lobby : bouton de démarrage */}
+        {error && <p className="text-red-400 text-xs font-medium max-w-xs text-center">{error}</p>}
+        {connecting && <div className="w-5 h-5 border-2 border-white/20 border-t-blue-400 rounded-full animate-spin" />}
+
+        <button onClick={onBack} className="text-white/30 text-xs hover:text-white/50 mt-2 transition-colors">
+          Retour au menu
+        </button>
+      </div>
+    );
+  }
+
+  // En jeu — état piloté par le serveur
+  const me = room.players.find((p) => p.id === myId);
+  const currentPlayer = room.players[room.currentPlayerIndex];
+  const isMyTurn = !!me && !!currentPlayer && me.id === currentPlayer.id;
+  const amHost = room.hostId === myId;
+
+  return (
+    <GameUI
+      gamePlayers={room.players}
+      currentPlayerIndex={room.currentPlayerIndex}
+      gamePhase={room.phase}
+      activeQuestion={room.activeQuestion}
+      winnerId={room.winnerId}
+      isMyTurn={isMyTurn}
+      myId={myId}
+      amHost={amHost}
+      roomCode={room.code}
+      cameraFixed={cameraFixed}
+      setCameraFixed={setCameraFixed}
+      panne={me?.panne ?? false}
+      onStart={() => emit('startGame')}
+      onPickDifficulty={(d) => emit('requestQuestion', { difficulty: d })}
+      onAnswer={(ci) => room.activeQuestion && emit('submitAnswer', { questionId: room.activeQuestion.id, choiceIndex: ci })}
+      onRestart={() => emit('startGame')}
+      onQuit={() => { disconnectSocket(); onBack(); }}
+      playersCount={room.players.length}
+    />
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// UI du jeu (partagée entre Solo et Multi)
+// ═════════════════════════════════════════════════════════════════════════════
+
+interface GameUIProps {
+  gamePlayers: PlayerInfo[];
+  currentPlayerIndex: number;
+  gamePhase: string;
+  activeQuestion: Question | null;
+  winnerId: string | null;
+  isMyTurn: boolean;
+  myId: string;
+  amHost: boolean;
+  roomCode: string | null;
+  cameraFixed: boolean;
+  setCameraFixed: (fn: (v: boolean) => boolean) => void;
+  panne: boolean;
+  onStart: () => void;
+  onPickDifficulty: (d: string) => void;
+  onAnswer: (choiceIndex: number) => void;
+  onRestart: () => void;
+  onQuit: () => void;
+  playersCount?: number;
+}
+
+function GameUI({
+  gamePlayers, currentPlayerIndex, gamePhase, activeQuestion, winnerId,
+  isMyTurn, myId, amHost, roomCode, cameraFixed, setCameraFixed, panne,
+  onStart, onPickDifficulty, onAnswer, onRestart, onQuit, playersCount,
+}: GameUIProps) {
+  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
+
+  return (
+    <div className="relative w-full h-screen bg-[#1e2638] overflow-hidden">
+      <div className="absolute inset-0 z-0">
+        <SceneErrorBoundary>
+          <GameScene
+            players={gamePlayers}
+            currentPlayerIndex={currentPlayerIndex}
+            cameraFixed={gamePhase === 'playing' && cameraFixed}
+          />
+        </SceneErrorBoundary>
+      </div>
+
+      <div className="absolute inset-0 z-10 pointer-events-none">
+
+        <PlayerList players={gamePlayers} currentPlayerIndex={currentPlayerIndex} myPlayerId={myId} />
+
+        {gamePhase === 'playing' && (
+          <div className="absolute bottom-6 left-4 pointer-events-auto z-10">
+            <button type="button" role="switch" aria-checked={cameraFixed}
+              onClick={() => setCameraFixed((v: boolean) => !v)}
+              className="glass rounded-xl px-3 py-2 flex items-center gap-3 text-left hover:bg-white/[0.04] transition-colors"
+            >
+              <span className="text-white/80 text-xs font-medium leading-tight">
+                Vue fixe
+                <span className="block text-[10px] text-white/35 font-normal mt-0.5">Suit le joueur actif</span>
+              </span>
+              <span className={`relative inline-flex h-6 w-10 shrink-0 rounded-full transition-colors ${cameraFixed ? 'bg-blue-500' : 'bg-white/15'}`}>
+                <span className={`pointer-events-none absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${cameraFixed ? 'translate-x-4' : 'translate-x-0'}`} />
+              </span>
+            </button>
+          </div>
+        )}
+
+        {/* Barre du haut */}
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2 pointer-events-auto">
+          {roomCode && (
+            <div className="glass rounded-lg px-3 py-1.5 flex items-center gap-2">
+              <span className="text-white/40 text-xs font-medium uppercase tracking-wider">Salon</span>
+              <span className="text-white font-semibold text-sm tracking-widest font-mono">{roomCode}</span>
+            </div>
+          )}
+          <button type="button" onClick={() => setShowQuitConfirm(true)}
+            className="glass rounded-lg px-3 py-1.5 text-white/40 hover:text-red-400 text-xs font-medium transition-colors flex items-center gap-1.5"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            Quitter
+          </button>
+        </div>
+
+        {/* Lobby */}
         {gamePhase === 'lobby' && (
-          <div className="pointer-events-auto absolute bottom-8 left-1/2 -translate-x-1/2 text-center">
-            <p className="text-white/60 text-sm mb-3">
-              {players.length} joueur{players.length > 1 ? 's' : ''} connecté{players.length > 1 ? 's' : ''}
-            </p>
-            {amHost && players.length >= 1 && (
-              <motion.button
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  players.forEach((p) => {
-                    p.setState('position', 0);
-                    p.setState('panne', false);
-                    p.setState('consecutiveCompliqué', 0);
-                  });
-                  setCurrentPlayerIndex(0);
-                  setActiveQuestion(null);
-                  setWinnerId(null);
-                  setLastQuestionIds([]);
-                  setGamePhase('playing');
-                }}
-                className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold text-xl rounded-2xl shadow-xl shadow-green-500/30"
-              >
-                🎮 Lancer la partie
-              </motion.button>
-            )}
-            {!amHost && (
-              <p className="text-white/40 text-sm">En attente que l&apos;hôte démarre...</p>
-            )}
+          <div className="pointer-events-auto absolute bottom-10 left-1/2 -translate-x-1/2 text-center">
+            <div className="glass-strong rounded-2xl px-8 py-6 min-w-[280px]">
+              <p className="text-white/40 text-xs font-medium uppercase tracking-wider mb-1">
+                {roomCode ? 'Joueurs connectés' : 'Mode local'}
+              </p>
+              <p className="text-white text-2xl font-bold tabular-nums mb-5">{playersCount ?? gamePlayers.length}</p>
+              {amHost ? (
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onStart}
+                  className="w-full py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold text-sm rounded-xl transition-colors"
+                >
+                  Lancer la partie
+                </motion.button>
+              ) : (
+                <p className="text-white/30 text-xs font-medium">En attente de l&apos;hôte…</p>
+              )}
+            </div>
           </div>
         )}
 
         {/* Sélecteur de difficulté */}
         <AnimatePresence>
           {gamePhase === 'playing' && isMyTurn && !activeQuestion && (
-            <DifficultyPicker
-              panne={(me?.getState('panne') as boolean) ?? false}
-              onPick={(d) => me?.setState('pickedDifficulty', d)}
-            />
+            <DifficultyPicker panne={panne} onPick={onPickDifficulty} />
           )}
         </AnimatePresence>
 
-        {/* Question pour le joueur actif */}
+        {/* Question */}
         <AnimatePresence>
-          {activeQuestion &&
-            me &&
-            (activeQuestion as Question).forPlayerId === me.id && (
-              <QuestionModal
-                question={activeQuestion as Question}
-                onAnswer={(choiceIndex) =>
-                  me.setState('submittedAnswer', {
-                    questionId: (activeQuestion as Question).id,
-                    choiceIndex,
-                  })
-                }
-              />
-            )}
+          {activeQuestion && activeQuestion.forPlayerId === myId && (
+            <QuestionModal question={activeQuestion} onAnswer={onAnswer} />
+          )}
         </AnimatePresence>
 
-        {/* Message d'attente pour les spectateurs */}
-        {gamePhase === 'playing' &&
-          activeQuestion &&
-          me &&
-          (activeQuestion as Question).forPlayerId !== me.id && (
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-              <motion.div
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ repeat: Infinity, duration: 1.8 }}
-                className="bg-black/50 backdrop-blur border border-white/10 rounded-2xl px-6 py-3 text-white/70 text-sm"
-              >
-                ⏳ En attente de la réponse de {gamePlayers.find(
-                  (p) => p.id === (activeQuestion as Question).forPlayerId
-                )?.name ?? 'un joueur'}...
-              </motion.div>
+        {/* Attente spectateurs */}
+        {gamePhase === 'playing' && activeQuestion && activeQuestion.forPlayerId !== myId && (
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
+            <div className="glass rounded-xl px-5 py-2.5 flex items-center gap-3">
+              <div className="w-4 h-4 border-2 border-white/20 border-t-blue-400 rounded-full animate-spin" />
+              <span className="text-white/50 text-sm font-medium">
+                {gamePlayers.find((p) => p.id === activeQuestion.forPlayerId)?.name ?? 'Un joueur'} répond…
+              </span>
             </div>
-          )}
+          </div>
+        )}
       </div>
 
-      {/* Modal de confirmation : quitter */}
+      {/* Modal quitter */}
       <AnimatePresence>
         {showQuitConfirm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 flex items-center justify-center bg-black/75 backdrop-blur-sm pointer-events-auto z-40"
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-auto"
           >
-            <motion.div
-              initial={{ scale: 0.85, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.85, y: 20 }}
-              transition={{ type: 'spring', damping: 22, stiffness: 280 }}
-              className="bg-[#1a1a3e] border border-white/10 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl"
+            <motion.div initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.92, opacity: 0 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+              className="glass-strong rounded-2xl p-7 max-w-sm w-full text-center"
             >
-              <p className="text-4xl mb-4">🚪</p>
-              <h2 className="text-white font-black text-2xl mb-2">Quitter la partie ?</h2>
-              <p className="text-white/50 text-sm mb-8">
-                Tu seras déconnecté du salon. Les autres joueurs pourront continuer.
-              </p>
-              <div className="flex gap-3">
-                <motion.button
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowQuitConfirm(false)}
-                  className="flex-1 py-3 rounded-2xl bg-white/8 border border-white/10 text-white font-semibold hover:bg-white/12 transition-colors"
-                >
-                  Annuler
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => window.location.reload()}
-                  className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-red-600 to-rose-500 text-white font-bold shadow-lg shadow-red-500/25"
-                >
-                  Quitter
-                </motion.button>
+              <h2 className="text-white font-semibold text-lg mb-2">Quitter ?</h2>
+              <p className="text-white/40 text-sm mb-6">Tu retourneras au menu principal.</p>
+              <div className="flex gap-2.5">
+                <button type="button" onClick={() => setShowQuitConfirm(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-white/5 border border-white/8 text-white/70 font-medium text-sm hover:bg-white/8 transition-colors"
+                >Annuler</button>
+                <button type="button" onClick={() => { setShowQuitConfirm(false); onQuit(); }}
+                  className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-400 text-white font-semibold text-sm transition-colors"
+                >Quitter</button>
               </div>
             </motion.div>
           </motion.div>
@@ -475,23 +510,22 @@ export default function GameBoard() {
           <WinScreen
             winner={gamePlayers.find((p) => p.id === winnerId)}
             isHost={amHost}
-            onRestart={() => {
-              if (!isHost()) return;
-              players.forEach((p) => {
-                p.setState('position', 0);
-                p.setState('panne', false);
-                p.setState('consecutiveCompliqué', 0);
-                p.setState('feedback', null);
-              });
-              setCurrentPlayerIndex(0);
-              setActiveQuestion(null);
-              setWinnerId(null);
-              setLastQuestionIds([]);
-              setGamePhase('playing');
-            }}
+            onRestart={onRestart}
           />
         )}
       </AnimatePresence>
     </div>
   );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Export principal — aiguillage Menu → Solo | Multi
+// ═════════════════════════════════════════════════════════════════════════════
+
+export default function GameBoard() {
+  const [mode, setMode] = useState<GameMode>('menu');
+
+  if (mode === 'menu') return <MainMenu onMode={setMode} />;
+  if (mode === 'solo') return <SoloGame onBack={() => setMode('menu')} />;
+  return <MultiGame onBack={() => setMode('menu')} />;
 }

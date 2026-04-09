@@ -17,74 +17,79 @@ export default function WinScreen({ winner, onRestart, isHost }: WinScreenProps)
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-md pointer-events-auto z-30"
+      className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md pointer-events-auto z-30"
     >
       <motion.div
-        initial={{ scale: 0.4, y: 60 }}
-        animate={{ scale: 1, y: 0 }}
-        transition={{ type: 'spring', damping: 14, stiffness: 120 }}
-        className="text-center px-8"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', damping: 22, stiffness: 200, delay: 0.1 }}
+        className="glass-strong rounded-2xl p-8 max-w-sm w-full text-center"
       >
-        {/* Trophée animé */}
-        <motion.div
-          animate={{ rotate: [-6, 6, -6], y: [0, -8, 0] }}
-          transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-          className="text-8xl mb-4 leading-none"
-        >
-          🏆
-        </motion.div>
+        {/* Icône victoire */}
+        <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+          <svg className="w-8 h-8 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+            <path d="M4 22h16" />
+            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+          </svg>
+        </div>
 
         <motion.h1
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="text-5xl font-black text-white mb-4"
+          className="text-white text-2xl font-bold mb-4"
         >
-          Victoire !
+          Victoire
         </motion.h1>
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.35 }}
-          className="flex items-center justify-center gap-3 mb-3"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="flex items-center justify-center gap-3 mb-2"
         >
           <div
-            className="w-12 h-12 rounded-full shadow-lg"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white"
             style={{ backgroundColor: winner.color }}
-          />
-          <p className="text-3xl font-bold text-white">{winner.name}</p>
+          >
+            {winner.name[0]?.toUpperCase()}
+          </div>
+          <p className="text-white text-lg font-semibold">{winner.name}</p>
         </motion.div>
 
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="text-white/50 text-lg mb-10"
+          transition={{ delay: 0.4 }}
+          className="text-white/30 text-sm mb-8"
         >
-          a atteint la case 100 !
+          a atteint la case 100
         </motion.p>
 
         {isHost ? (
           <motion.button
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.65 }}
-            whileHover={{ scale: 1.07, y: -2 }}
-            whileTap={{ scale: 0.95 }}
+            transition={{ delay: 0.5 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
             onClick={onRestart}
-            className="px-10 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold text-xl rounded-2xl shadow-xl shadow-green-500/30"
+            className="w-full py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold text-sm rounded-xl transition-colors"
           >
-            🔄 Rejouer
+            Rejouer
           </motion.button>
         ) : (
           <motion.p
             initial={{ opacity: 0 }}
-            animate={{ opacity: [0.4, 0.8, 0.4] }}
-            transition={{ delay: 0.65, repeat: Infinity, duration: 2 }}
-            className="text-white/40 text-base"
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-white/25 text-xs font-medium"
           >
-            En attente de l&apos;hôte pour rejouer...
+            En attente de l&apos;hôte pour rejouer…
           </motion.p>
         )}
       </motion.div>

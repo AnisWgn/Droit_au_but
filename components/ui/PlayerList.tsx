@@ -11,7 +11,7 @@ interface PlayerListProps {
 
 export default function PlayerList({ players, currentPlayerIndex, myPlayerId }: PlayerListProps) {
   return (
-    <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
+    <div className="absolute top-4 left-4 flex flex-col gap-1.5 z-10">
       <AnimatePresence>
         {players.map((player, index) => {
           const isActive = index === currentPlayerIndex;
@@ -20,37 +20,38 @@ export default function PlayerList({ players, currentPlayerIndex, myPlayerId }: 
           return (
             <motion.div
               key={player.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{
-                opacity: 1,
-                x: 0,
-                scale: isActive ? 1.04 : 1,
-              }}
-              transition={{ duration: 0.25, delay: index * 0.04 }}
-              className={`flex items-center gap-3 pl-3 pr-4 py-2 rounded-xl backdrop-blur-sm transition-all ${
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.2, delay: index * 0.03 }}
+              className={`flex items-center gap-2.5 pl-2.5 pr-3.5 py-2 rounded-xl transition-all duration-200 ${
                 isActive
-                  ? 'bg-white/20 border-2 border-white/40 shadow-lg'
-                  : 'bg-black/40 border border-white/8'
+                  ? 'glass-strong border-blue-500/20 shadow-lg shadow-blue-500/5'
+                  : 'glass'
               }`}
             >
-              {/* Avatar coloré */}
+              {/* Avatar */}
               <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-black text-white flex-shrink-0 shadow-md"
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
                 style={{ backgroundColor: player.color }}
               >
                 {player.name[0]?.toUpperCase() ?? '?'}
               </div>
 
-              {/* Nom + barre de progression */}
               <div className="min-w-0">
-                <p className="text-white text-sm font-semibold leading-none truncate max-w-[120px]">
-                  {player.name}
-                  {isMe && <span className="text-white/50 font-normal"> (moi)</span>}
-                  {player.panne && <span className="ml-1 text-yellow-400">🔧</span>}
-                </p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-white text-xs font-medium leading-none truncate max-w-[100px]">
+                    {player.name}
+                  </p>
+                  {isMe && (
+                    <span className="text-white/25 text-[10px] font-medium">toi</span>
+                  )}
+                  {player.panne && (
+                    <span className="text-amber-400 text-[10px] font-semibold">panne</span>
+                  )}
+                </div>
 
                 <div className="flex items-center gap-2 mt-1">
-                  <div className="h-1.5 bg-white/15 rounded-full w-20 overflow-hidden">
+                  <div className="h-1 bg-white/[0.06] rounded-full w-16 overflow-hidden">
                     <motion.div
                       className="h-full rounded-full"
                       style={{ backgroundColor: player.color }}
@@ -58,21 +59,14 @@ export default function PlayerList({ players, currentPlayerIndex, myPlayerId }: 
                       transition={{ duration: 0.5, ease: 'easeOut' }}
                     />
                   </div>
-                  <span className="text-white/60 text-xs font-mono tabular-nums">
-                    {player.position}/100
+                  <span className="text-white/30 text-[10px] font-mono tabular-nums">
+                    {player.position}
                   </span>
                 </div>
               </div>
 
-              {/* Indicateur de tour */}
               {isActive && (
-                <motion.span
-                  animate={{ opacity: [0.4, 1, 0.4] }}
-                  transition={{ repeat: Infinity, duration: 1.2 }}
-                  className="ml-auto text-yellow-400 text-base"
-                >
-                  ▶
-                </motion.span>
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0 animate-pulse" />
               )}
             </motion.div>
           );

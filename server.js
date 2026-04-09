@@ -94,6 +94,7 @@ function serializeRoom(room) {
           id: room.activeQuestion.id,
           question: room.activeQuestion.question,
           choices: room.activeQuestion.choices,
+          correctIndex: room.activeQuestion.correctIndex,
           difficulty: room.activeQuestion.difficulty,
           kind: room.activeQuestion.kind,
           forPlayerId: room.activeQuestion.forPlayerId,
