@@ -4,7 +4,7 @@ export interface Question {
   choices: string[];
   correctIndex: number;
   difficulty: 'simple' | 'moyen' | 'compliqué';
-  kind: 'normal' | 'radar';
+  kind: 'normal' | 'radar' | 'chess';
   forPlayerId: string;
 }
 

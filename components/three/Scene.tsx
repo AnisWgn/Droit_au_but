@@ -5,19 +5,21 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Cylinder, Sky } from '@react-three/drei';
 import * as THREE from 'three';
 import Board, { getPawnWorldPosition } from './Board';
-import Moon from './Moon';
 import Pawn from './Pawn';
 import { PlayerInfo } from '@/types/game';
 
 interface SceneProps {
   players: PlayerInfo[];
   currentPlayerIndex: number;
-  /** Vue fixe : caméra verrouillée sur le pion du joueur dont c’est le tour. */
+  /** Pendant la partie : caméra qui suit le pion du joueur actif (plus d’OrbitControls). */
   cameraFixed?: boolean;
 }
 
-/** Décalage caméra → pion (même rapport que la vue par défaut [0,16,18] vers ~[0,0.5,0]). */
-const FOLLOW_OFFSET = new THREE.Vector3(0, 15.5, 17.5);
+/**
+ * Décalage caméra → point visé sur le pion (plus court = plus zoomé / moins dézoomé).
+ * Avant ~ (15.5, 17.5) ; rapproché pour un vrai mode « focus » sur le pion.
+ */
+const FOLLOW_OFFSET = new THREE.Vector3(0, 6.8, 7.6);
 
 function CameraFollowActivePawn({
   enabled,
@@ -74,24 +76,6 @@ function EveningSky() {
       inclination={0.52}
       azimuth={0.32}
     />
-  );
-}
-
-// ─── Sol : marbre foncé ──────────────────────────────────────────────────────
-
-function MarbleFloor() {
-  return (
-    <group>
-      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
-        <planeGeometry args={[40, 40]} />
-        <meshStandardMaterial color="#1a1a2e" roughness={0.3} metalness={0.1} />
-      </mesh>
-      {/* Reflet subtil */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.018, 0]}>
-        <planeGeometry args={[16, 16]} />
-        <meshStandardMaterial color="#252545" roughness={0.15} metalness={0.2} />
-      </mesh>
-    </group>
   );
 }
 
@@ -155,17 +139,21 @@ function WallLamp({ position }: { position: [number, number, number] }) {
 
 // ─── Estrade / podium sous le plateau ────────────────────────────────────────
 
+/** Largeur (X) et profondeur (Z) de l’estrade sous le plateau — plus grande = marge autour du parcours. */
+const PODIUM_WIDTH = 18;
+const PODIUM_DEPTH = 20;
+
 function Podium() {
   return (
     <group>
       {/* Marche basse */}
       <mesh receiveShadow position={[0, 0.04, 0]}>
-        <boxGeometry args={[14, 0.08, 15]} />
+        <boxGeometry args={[PODIUM_WIDTH, 0.08, PODIUM_DEPTH]} />
         <meshStandardMaterial color="#2a2a3e" roughness={0.35} metalness={0.12} />
       </mesh>
       {/* Liseré doré */}
       <mesh position={[0, 0.085, 0]}>
-        <boxGeometry args={[14.05, 0.005, 15.05]} />
+        <boxGeometry args={[PODIUM_WIDTH + 0.05, 0.005, PODIUM_DEPTH + 0.05]} />
         <meshStandardMaterial color="#d4a04a" roughness={0.2} metalness={0.7} transparent opacity={0.3} />
       </mesh>
     </group>
@@ -256,8 +244,6 @@ export default function Scene({ players, currentPlayerIndex, cameraFixed = false
       )}
 
       <Suspense fallback={null}>
-        <Moon />
-        <MarbleFloor />
         <Podium />
 
         {/* 8 colonnes autour du plateau */}
@@ -276,9 +262,9 @@ export default function Scene({ players, currentPlayerIndex, cameraFixed = false
         <WallLamp position={[-9, 0, 4]} />
         <WallLamp position={[9, 0, 4]} />
 
-        {/* Balustrades devant et derrière */}
-        <Railing position={[0, 0, -9]} length={14} rotation={[0, 0, 0]} />
-        <Railing position={[0, 0, 9]} length={14} rotation={[0, 0, 0]} />
+        {/* Balustrades devant et derrière (alignées sur le podium) */}
+        <Railing position={[0, 0, -(PODIUM_DEPTH / 2 + 0.2)]} length={PODIUM_WIDTH} rotation={[0, 0, 0]} />
+        <Railing position={[0, 0, PODIUM_DEPTH / 2 + 0.2]} length={PODIUM_WIDTH} rotation={[0, 0, 0]} />
 
         <Board />
 

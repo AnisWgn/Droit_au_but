@@ -1,10 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config) => {
-    config.externals.push({
-      'utf-8-validate': 'commonjs utf-8-validate',
-      bufferutil: 'commonjs bufferutil',
-    });
+  /**
+   * socket.io / ws : dépendances natives optionnelles.
+   * Ne pas les marquer en externals côté client (sinon le chunk ne peut pas s'exécuter dans le navigateur).
+   */
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        bufferutil: false,
+        'utf-8-validate': false,
+      };
+    }
     return config;
   },
 };

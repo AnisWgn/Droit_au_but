@@ -1,17 +1,90 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useLayoutEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Cylinder } from '@react-three/drei';
+import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { getPawnOffset, getTilePosition } from './Board';
 import { PlayerInfo } from '@/types/game';
 
+useGLTF.preload('/glb/Pawn.glb');
+
+const TARGET_HEIGHT = 0.48;
+
 interface PawnProps {
   player: PlayerInfo;
   playerIndex: number;
   isActive: boolean;
+}
+
+/** Clone récursif avec matériaux dupliqués (sinon tous les pions partagent les mêmes couleurs). */
+function cloneSceneWithOwnMaterials(source: THREE.Object3D): THREE.Group {
+  const root = source.clone(true) as THREE.Group;
+  root.traverse((obj) => {
+    const mesh = obj as THREE.Mesh;
+    if (!mesh.isMesh || !mesh.material) return;
+    if (Array.isArray(mesh.material)) {
+      mesh.material = mesh.material.map((m) => (m ? m.clone() : m));
+    } else {
+      mesh.material = mesh.material.clone();
+    }
+  });
+  return root;
+}
+
+function normalizeModelScaleAndGround(root: THREE.Group) {
+  const box = new THREE.Box3().setFromObject(root);
+  const size = box.getSize(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z, 0.001);
+  const s = TARGET_HEIGHT / maxDim;
+  root.scale.setScalar(s);
+  root.updateMatrixWorld(true);
+  const box2 = new THREE.Box3().setFromObject(root);
+  const center = box2.getCenter(new THREE.Vector3());
+  root.position.sub(center);
+  root.position.y -= box2.min.y;
+}
+
+function applyPlayerTint(root: THREE.Object3D, color: THREE.Color, active: boolean) {
+  root.traverse((obj) => {
+    const mesh = obj as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const mat of mats) {
+      if (!mat) continue;
+      if (
+        mat instanceof THREE.MeshStandardMaterial ||
+        mat instanceof THREE.MeshPhysicalMaterial
+      ) {
+        mat.color.copy(color);
+        mat.emissive.copy(color);
+        mat.emissiveIntensity = active ? 0.22 : 0.06;
+        mat.needsUpdate = true;
+      } else if (
+        mat instanceof THREE.MeshLambertMaterial ||
+        mat instanceof THREE.MeshPhongMaterial
+      ) {
+        mat.color.copy(color);
+        if ('emissive' in mat && mat.emissive) {
+          mat.emissive.copy(color);
+          mat.emissiveIntensity = active ? 0.15 : 0.04;
+        }
+        mat.needsUpdate = true;
+      } else if (mat instanceof THREE.MeshBasicMaterial) {
+        mat.color.copy(color);
+        mat.needsUpdate = true;
+      } else if (mat instanceof THREE.MeshToonMaterial) {
+        mat.color.copy(color);
+        mat.needsUpdate = true;
+      } else if ('color' in mat && mat.color instanceof THREE.Color) {
+        mat.color.copy(color);
+        mat.needsUpdate = true;
+      }
+    }
+  });
 }
 
 export default function Pawn({ player, playerIndex, isActive }: PawnProps) {
@@ -20,8 +93,20 @@ export default function Pawn({ player, playerIndex, isActive }: PawnProps) {
   const prevPos = useRef<number>(-1);
   const bobbingTween = useRef<gsap.core.Tween | null>(null);
 
+  const { scene } = useGLTF('/glb/Pawn.glb');
+  const pawnRoot = useMemo(() => {
+    const root = cloneSceneWithOwnMaterials(scene);
+    normalizeModelScaleAndGround(root);
+    return root;
+  }, [scene]);
+
+  const playerColor = useMemo(() => new THREE.Color(player.color), [player.color]);
+
+  useLayoutEffect(() => {
+    applyPlayerTint(pawnRoot, playerColor, isActive);
+  }, [pawnRoot, playerColor, isActive]);
+
   const [dx, dz] = getPawnOffset(playerIndex);
-  const playerColor = new THREE.Color(player.color);
 
   useEffect(() => {
     if (!groupRef.current) return;
@@ -91,56 +176,29 @@ export default function Pawn({ player, playerIndex, isActive }: PawnProps) {
 
   return (
     <group ref={groupRef}>
-      {/* Socle (base en bois poli) */}
-      <Cylinder args={[0.14, 0.17, 0.05, 16]} position={[0, -0.1, 0]} castShadow>
-        <meshStandardMaterial color="#3d2b1f" roughness={0.4} metalness={0.15} />
-      </Cylinder>
+      <primitive object={pawnRoot} />
 
-      {/* Corps (toge / robe d'avocat) */}
-      <Cylinder args={[0.1, 0.14, 0.24, 16]} position={[0, 0.02, 0]} castShadow>
-        <meshStandardMaterial
-          color={playerColor}
-          emissive={playerColor}
-          emissiveIntensity={isActive ? 0.2 : 0.04}
-          roughness={0.55}
-          metalness={0.05}
-        />
-      </Cylinder>
-
-      {/* Col (rabat blanc d'avocat) */}
-      <Cylinder args={[0.105, 0.1, 0.03, 16]} position={[0, 0.145, 0]}>
-        <meshStandardMaterial color="#f0ebe0" roughness={0.7} metalness={0} />
-      </Cylinder>
-
-      {/* Tête */}
-      <mesh castShadow position={[0, 0.22, 0]}>
-        <sphereGeometry args={[0.08, 16, 16]} />
-        <meshStandardMaterial color="#e8d5b7" roughness={0.6} metalness={0} />
-      </mesh>
-
-      {/* Anneau actif au sol */}
-      <mesh ref={glowRef} position={[0, -0.12, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.18, 0.25, 32]} />
+      <mesh ref={glowRef} position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.2, 0.28, 32]} />
         <meshBasicMaterial color={playerColor} transparent opacity={0} side={THREE.DoubleSide} />
       </mesh>
 
-      {/* Ombre portée */}
-      <mesh position={[0, -0.125, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.13, 16]} />
+      <mesh position={[0, -0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.15, 16]} />
         <meshBasicMaterial color="#0a0a0a" transparent opacity={0.25} />
       </mesh>
 
-      {/* Indicateur panne (petit parchemin roulé rouge) */}
       {player.panne && (
-        <group position={[0.14, 0.25, 0]} rotation={[0, 0, 0.3]}>
-          <Cylinder args={[0.025, 0.025, 0.1, 8]} rotation={[Math.PI / 2, 0, 0]}>
+        <group position={[0.18, 0.38, 0]} rotation={[0, 0, 0.3]}>
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.025, 0.025, 0.1, 8]} />
             <meshStandardMaterial
               color="#dc2626"
               emissive="#b91c1c"
               emissiveIntensity={0.3}
               roughness={0.5}
             />
-          </Cylinder>
+          </mesh>
         </group>
       )}
     </group>

@@ -39,14 +39,16 @@ const DIFFICULTIES = [
 
 export default function DifficultyPicker({ panne, onPick }: DifficultyPickerProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 30 }}
-      transition={{ type: 'spring', damping: 26, stiffness: 300 }}
-      className="pointer-events-auto absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
-    >
-      <div className="glass-strong rounded-2xl p-5 min-w-[340px]">
+    /* Conteneur flex : le transform Framer sur l’enfant cassait left-1/2 -translate-x-1/2 */
+    <div className="pointer-events-none absolute bottom-8 inset-x-0 z-10 flex justify-center px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 30 }}
+        transition={{ type: 'spring', damping: 26, stiffness: 300 }}
+        className="pointer-events-auto w-full max-w-md"
+      >
+      <div className="glass-strong rounded-2xl p-5 min-w-0 sm:min-w-[340px]">
         <div className="text-center mb-4">
           <p className="text-white font-semibold text-sm">
             C&apos;est votre tour
@@ -89,6 +91,7 @@ export default function DifficultyPicker({ panne, onPick }: DifficultyPickerProp
           })}
         </div>
       </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }

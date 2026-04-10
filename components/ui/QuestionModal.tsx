@@ -32,6 +32,7 @@ export default function QuestionModal({ question, onAnswer }: QuestionModalProps
 
   const wasCorrect = selected !== null && selected === question.correctIndex;
   const isRadar = question.kind === 'radar';
+  const isChess = question.kind === 'chess';
   const tag = DIFFICULTY_TAG[question.difficulty] ?? DIFFICULTY_TAG.simple;
 
   return (
@@ -51,14 +52,19 @@ export default function QuestionModal({ question, onAnswer }: QuestionModalProps
         className="relative glass-strong rounded-2xl p-6 max-w-lg w-full shadow-2xl"
       >
         {/* Tag difficulté */}
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
           <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-semibold uppercase tracking-wider border ${
-            isRadar
-              ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-              : `${tag.bg} ${tag.color}`
+            isChess
+              ? 'bg-violet-500/15 border-violet-500/30 text-violet-300'
+              : isRadar
+                ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                : `${tag.bg} ${tag.color}`
           }`}>
-            {isRadar ? 'Radar' : tag.label}
+            {isChess ? 'Quiz échecs' : isRadar ? 'Radar' : tag.label}
           </span>
+          {isChess && (
+            <span className="text-white/30 text-xs font-medium">Questions mélangées · valide ton coup</span>
+          )}
           {isRadar && (
             <span className="text-white/30 text-xs font-medium">Case spéciale</span>
           )}

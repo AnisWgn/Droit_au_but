@@ -7,9 +7,46 @@ interface WinScreenProps {
   winner?: PlayerInfo;
   onRestart: () => void;
   isHost: boolean;
+  /** Partie nulle (échecs). */
+  isDraw?: boolean;
+  variant?: 'dab' | 'chess';
 }
 
-export default function WinScreen({ winner, onRestart, isHost }: WinScreenProps) {
+export default function WinScreen({ winner, onRestart, isHost, isDraw, variant = 'dab' }: WinScreenProps) {
+  if (isDraw) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md pointer-events-auto z-30"
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="glass-strong rounded-2xl p-8 max-w-sm w-full text-center"
+        >
+          <h1 className="text-white text-2xl font-bold mb-2">Match nul</h1>
+          <p className="text-white/45 text-sm mb-8">
+            La partie d&apos;échecs se termine sans vainqueur (pat, nulle matérielle, etc.).
+          </p>
+          {isHost ? (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={onRestart}
+              className="w-full py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold text-sm rounded-xl transition-colors"
+            >
+              Rejouer
+            </motion.button>
+          ) : (
+            <p className="text-white/25 text-xs font-medium">En attente de l&apos;hôte pour rejouer…</p>
+          )}
+        </motion.div>
+      </motion.div>
+    );
+  }
+
   if (!winner) return null;
 
   return (
@@ -67,7 +104,7 @@ export default function WinScreen({ winner, onRestart, isHost }: WinScreenProps)
           transition={{ delay: 0.4 }}
           className="text-white/30 text-sm mb-8"
         >
-          a atteint la case 100
+          {variant === 'chess' ? 'a gagné par échec et mat' : 'a atteint la case 100'}
         </motion.p>
 
         {isHost ? (
