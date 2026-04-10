@@ -3,25 +3,24 @@
   "version": "2.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
     "start": "next start",
     "start:3001": "next start -p 3001"
   },
   "dependencies": {
-    "@react-three/drei": "^9.115.0",
-    "@react-three/fiber": "^8.17.10",
+    "@react-three/drei": "^10.0.0",
+    "@react-three/fiber": "^9.0.0",
     "@supabase/supabase-js": "^2.45.4",
     "autoprefixer": "^10.4.20",
     "chess.js": "^1.4.0",
     "express": "^5.2.1",
     "framer-motion": "^11.12.0",
     "gsap": "^3.12.5",
-    "next": "^14.2.29",
-    "playroomkit": "^0.0.57",
+    "next": "^16.2.3",
     "postcss": "^8.4.49",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
     "tailwindcss": "^3.4.15",
@@ -29,8 +28,8 @@
   },
   "devDependencies": {
     "@types/node": "^20.16.0",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@types/three": "^0.167.0",
     "typescript": "^5.6.0"
   }

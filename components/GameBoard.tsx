@@ -4,8 +4,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 
-import QuestionModal from './ui/QuestionModal';01
-+63.0
+import QuestionModal from './ui/QuestionModal';
 import DifficultyPicker from './ui/DifficultyPicker';
 import PlayerList from './ui/PlayerList';
 import WinScreen from './ui/WinScreen';

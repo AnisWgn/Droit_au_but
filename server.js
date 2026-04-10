@@ -82,6 +82,24 @@ function pickRandomQuestion(pool, excludeIds = new Set()) {
 }
 
 /** Questions échecs : tous les niveaux mélangés. */
+/**
+ * Variante quiz : mauvaise réponse → le coup n’est pas joué mais le trait passe à l’autre camp
+ * (sinon `chess.turn()` reste inchangé et le même joueur peut encore jouer).
+ */
+function flipSideToMoveInFen(fen) {
+  const parts = String(fen || '')
+    .trim()
+    .split(/\s+/);
+  if (parts.length < 2 || (parts[1] !== 'w' && parts[1] !== 'b')) return fen;
+  parts[1] = parts[1] === 'w' ? 'b' : 'w';
+  const next = parts.join(' ');
+  try {
+    return new Chess(next).fen();
+  } catch {
+    return fen;
+  }
+}
+
 function pickRandomChessQuestion(room) {
   const merged = []
     .concat(QUESTIONS.simple || [])
@@ -494,8 +512,12 @@ io.on('connection', (socket) => {
         return;
       }
 
+      /* Mauvaise réponse : coup annulé + trait inversé dans le FEN (aligné sur chess.turn() pour la suite). */
       room.chessPendingMove = null;
       room.activeQuestion = null;
+      room.chessFen = flipSideToMoveInFen(room.chessFen);
+      const after = new Chess(room.chessFen);
+      room.currentPlayerIndex = after.turn() === 'w' ? 0 : 1;
       notifyAnswerAndBroadcast(room, correct, player.id, choiceIdx);
       return;
     }
