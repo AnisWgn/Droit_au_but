@@ -90,11 +90,11 @@ function flipSideToMoveInFen(fen) {
   const parts = String(fen || '')
     .trim()
     .split(/\s+/);
-  if (parts.length < 2 || (parts[1] !== 'w' && parts[1] !== 'b')) return fen;
+  if (parts.length < 4 || (parts[1] !== 'w' && parts[1] !== 'b')) return fen;
   parts[1] = parts[1] === 'w' ? 'b' : 'w';
-  const next = parts.join(' ');
+  parts[3] = '-';
   try {
-    return new Chess(next).fen();
+    return new Chess(parts.join(' ')).fen();
   } catch {
     return fen;
   }
@@ -164,6 +164,7 @@ function serializeRoom(room) {
           promotion: room.chessPendingMove.promotion || null,
         }
       : null;
+    base.chessMoveLog = Array.isArray(room.chessMoveLog) ? room.chessMoveLog : [];
   }
   return base;
 }
@@ -310,6 +311,7 @@ io.on('connection', (socket) => {
       room.phase = 'playing';
       room.chessFen = new Chess().fen();
       room.chessPendingMove = null;
+      room.chessMoveLog = [];
       room.currentPlayerIndex = 0;
       room.winnerId = null;
       room.activeQuestion = null;
@@ -498,6 +500,8 @@ io.on('connection', (socket) => {
         room.chessFen = chess.fen();
         room.chessPendingMove = null;
         room.activeQuestion = null;
+        if (!room.chessMoveLog) room.chessMoveLog = [];
+        room.chessMoveLog.push({ san: ok.san, color: ok.color });
 
         if (chess.isCheckmate()) {
           room.phase = 'finished';

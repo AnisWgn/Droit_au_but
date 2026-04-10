@@ -14,6 +14,9 @@ const Z_OFFSET = -(10 * TILE_SPACING) / 2;
 
 const HEIGHT_PER_ROW = 0.06;
 
+/** Hauteur du pion au-dessus de la case (socle + léger décollage). */
+export const OIE_PAWN_Y_OFFSET = 0.39;
+
 export function getTilePosition(index: number): [number, number, number] {
   if (index === 100) {
     const row = 10;
@@ -44,7 +47,7 @@ export function getPawnOffset(playerIndex: number): [number, number] {
 export function getPawnWorldPosition(playerIndex: number, boardPosition: number): [number, number, number] {
   const [dx, dz] = getPawnOffset(playerIndex);
   const [tx, ty, tz] = getTilePosition(boardPosition);
-  return [tx + dx, ty + 0.32, tz + dz];
+  return [tx + dx, ty + OIE_PAWN_Y_OFFSET, tz + dz];
 }
 
 // ─── Palette "palais de justice" ─────────────────────────────────────────────
@@ -79,30 +82,6 @@ function PathConnector({ from, to }: { from: [number, number, number]; to: [numb
       <planeGeometry args={[0.04, length * 0.45]} />
       <meshBasicMaterial color="#d4a04a" transparent opacity={0.08} />
     </mesh>
-  );
-}
-
-// ─── Case départ : livre de loi ouvert ───────────────────────────────────────
-
-function LawBook({ y }: { y: number }) {
-  return (
-    <group position={[0, y + 0.02, 0]}>
-      {/* Couverture */}
-      <mesh castShadow>
-        <boxGeometry args={[0.24, 0.06, 0.18]} />
-        <meshStandardMaterial color="#1a365d" roughness={0.6} metalness={0.1} />
-      </mesh>
-      {/* Tranche dorée */}
-      <mesh position={[0, 0.032, 0]}>
-        <boxGeometry args={[0.22, 0.005, 0.16]} />
-        <meshStandardMaterial color="#d4a04a" roughness={0.3} metalness={0.6} />
-      </mesh>
-      {/* Pages */}
-      <mesh position={[0, 0.015, 0]}>
-        <boxGeometry args={[0.21, 0.03, 0.15]} />
-        <meshStandardMaterial color="#f5f0e8" roughness={0.9} metalness={0} />
-      </mesh>
-    </group>
   );
 }
 
@@ -213,7 +192,7 @@ export default function Board() {
             {/* Filet doré sur le dessus */}
             <mesh position={[0, tileH / 2 + 0.002, 0]} rotation={[-Math.PI / 2, 0, 0]}>
               <ringGeometry args={[TILE_SIZE * 0.38, TILE_SIZE * 0.41, 32]} />
-              <meshBasicMaterial color="#d4a04a" transparent opacity={isRadar || isStart || isEnd ? 0.2 : 0.05} side={THREE.DoubleSide} />
+              <meshBasicMaterial color="#d4a04a" transparent opacity={isRadar || isEnd ? 0.2 : 0.05} side={THREE.DoubleSide} />
             </mesh>
 
             {/* Numéro sur chaque tuile — or + contour */}
@@ -231,7 +210,6 @@ export default function Board() {
               {String(i)}
             </Text>
 
-            {isStart && <LawBook y={tileH / 2} />}
             {isEnd && <JudgeGavel y={tileH / 2} />}
           </group>
         );

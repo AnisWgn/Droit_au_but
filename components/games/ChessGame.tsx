@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Chess, type Square } from 'chess.js';
@@ -21,6 +21,7 @@ interface ChessRoomState {
   players: PlayerInfo[];
   chessFen?: string;
   chessPending?: { from: string; to: string; promotion: string | null } | null;
+  chessMoveLog?: { san: string; color: 'w' | 'b' }[];
 }
 
 interface ChessGameProps {
@@ -29,6 +30,21 @@ interface ChessGameProps {
   amHost: boolean;
   emit: (ev: string, data?: Record<string, unknown>) => void;
   onQuit: () => void;
+}
+
+function buildMoveRows(log: { san: string; color: 'w' | 'b' }[] | undefined) {
+  const l = log ?? [];
+  const rows: { num: number; white: string; black?: string }[] = [];
+  for (let i = 0; i < l.length; i += 2) {
+    const white = l[i];
+    const black = l[i + 1];
+    rows.push({
+      num: rows.length + 1,
+      white: white?.san ?? '',
+      black: black?.san,
+    });
+  }
+  return rows;
 }
 
 export default function ChessGame({ room, myId, amHost, emit, onQuit }: ChessGameProps) {
@@ -112,14 +128,21 @@ export default function ChessGame({ room, myId, amHost, emit, onQuit }: ChessGam
   const pWhite = room.players[0];
   const pBlack = room.players[1];
 
+  const moveRows = useMemo(() => buildMoveRows(room.chessMoveLog), [room.chessMoveLog]);
+  const logEndRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [room.chessMoveLog?.length]);
+
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-[#121620]">
+    <div className="relative h-screen w-full overflow-hidden bg-[#6eb8ff]">
       <div className="absolute inset-0 z-0">
         <ChessScene
           fen={fen}
           selected={selected}
           legalSquares={legalTargets}
           onSquareClick={onSquareClick}
+          playerColor={myColor}
         />
       </div>
 
@@ -152,14 +175,39 @@ export default function ChessGame({ room, myId, amHost, emit, onQuit }: ChessGam
           )}
         </div>
 
-        <div className="pointer-events-auto absolute right-4 top-4 z-20 flex gap-2">
-          <button
-            type="button"
-            onClick={() => setShowQuitConfirm(true)}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/50 hover:border-red-400/40 hover:text-red-400"
-          >
-            Quitter
-          </button>
+        <div className="pointer-events-auto absolute right-4 top-4 bottom-8 z-20 flex w-[min(260px,calc(100vw-2rem))] flex-col gap-3">
+          <div className="flex shrink-0 justify-end">
+            <button
+              type="button"
+              onClick={() => setShowQuitConfirm(true)}
+              className="rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs font-medium text-black hover:border-red-400/40 hover:text-red-400"
+            >
+              Quitter
+            </button>
+          </div>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-md">
+            <p className="shrink-0 px-4 pt-3 text-[10px] font-semibold uppercase tracking-wider text-white/40">
+              Coups joués
+            </p>
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-1">
+              {moveRows.length === 0 ? (
+                <p className="text-[11px] text-white/35">Aucun coup pour l&apos;instant.</p>
+              ) : (
+                <table className="w-full border-collapse text-left text-[11px] text-white/90">
+                  <tbody>
+                    {moveRows.map((r) => (
+                      <tr key={r.num} className="border-b border-white/[0.06] last:border-0">
+                        <td className="w-8 py-1.5 pr-2 align-top tabular-nums text-white/35">{r.num}.</td>
+                        <td className="py-1.5 pr-3 align-top font-mono">{r.white}</td>
+                        <td className="py-1.5 align-top font-mono text-white/75">{r.black ?? ''}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              <div ref={logEndRef} className="h-px shrink-0" aria-hidden />
+            </div>
+          </div>
         </div>
       </div>
 

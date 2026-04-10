@@ -32,6 +32,7 @@ interface RoomState {
   players: PlayerInfo[];
   chessFen?: string;
   chessPending?: { from: string; to: string; promotion: string | null } | null;
+  chessMoveLog?: { san: string; color: 'w' | 'b' }[];
 }
 
 // ─── Scene 3D (lazy) + Error Boundary ────────────────────────────────────────
@@ -50,7 +51,7 @@ class SceneErrorBoundary extends React.Component<{ children: React.ReactNode }, 
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Multijoueur (Socket.IO) — seul mode disponible
+// Multijoueur
 // ═════════════════════════════════════════════════════════════════════════════
 
 function MultiGame() {
@@ -214,6 +215,7 @@ function MultiGame() {
           players: room.players,
           chessFen: room.chessFen,
           chessPending: room.chessPending,
+          chessMoveLog: room.chessMoveLog,
         }}
         myId={myId}
         amHost={amHost}

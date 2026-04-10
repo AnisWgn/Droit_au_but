@@ -1,16 +1,16 @@
 'use client';
 
 import { useRef, useEffect, useLayoutEffect, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import gsap from 'gsap';
-import { getPawnOffset, getTilePosition } from './Board';
+import { getPawnOffset, getTilePosition, OIE_PAWN_Y_OFFSET } from './Board';
 import { PlayerInfo } from '@/types/game';
 
-useGLTF.preload('/glb/Pawn.glb');
+useGLTF.preload('/glb/oie/Pawn.glb');
 
-const TARGET_HEIGHT = 0.48;
+/** Hauteur cible du modèle GLB (pions plus grands sur le plateau). */
+const TARGET_HEIGHT = 0.52;
 
 interface PawnProps {
   player: PlayerInfo;
@@ -89,11 +89,10 @@ function applyPlayerTint(root: THREE.Object3D, color: THREE.Color, active: boole
 
 export default function Pawn({ player, playerIndex, isActive }: PawnProps) {
   const groupRef = useRef<THREE.Group>(null);
-  const glowRef = useRef<THREE.Mesh>(null);
   const prevPos = useRef<number>(-1);
   const bobbingTween = useRef<gsap.core.Tween | null>(null);
 
-  const { scene } = useGLTF('/glb/Pawn.glb');
+  const { scene } = useGLTF('/glb/oie/Pawn.glb');
   const pawnRoot = useMemo(() => {
     const root = cloneSceneWithOwnMaterials(scene);
     normalizeModelScaleAndGround(root);
@@ -113,13 +112,16 @@ export default function Pawn({ player, playerIndex, isActive }: PawnProps) {
 
     const [tx, ty, tz] = getTilePosition(player.position);
     const targetX = tx + dx;
-    const targetY = ty + 0.32;
+    const targetY = ty + OIE_PAWN_Y_OFFSET;
     const targetZ = tz + dz;
 
     if (prevPos.current === -1) {
       groupRef.current.position.set(targetX, targetY, targetZ);
       prevPos.current = player.position;
-    } else if (prevPos.current !== player.position) {
+      return;
+    }
+
+    if (prevPos.current !== player.position) {
       prevPos.current = player.position;
 
       const tl = gsap.timeline();
@@ -143,8 +145,12 @@ export default function Pawn({ player, playerIndex, isActive }: PawnProps) {
         duration: 0.45,
         ease: 'bounce.out',
       });
+      return;
     }
-  }, [player.position, dx, dz]);
+
+    /* Même case : mise à jour si OIE_PAWN_Y_OFFSET (ou décalage) change — sinon la caméra bouge seule. */
+    groupRef.current.position.set(targetX, targetY, targetZ);
+  }, [player.position, dx, dz, OIE_PAWN_Y_OFFSET]);
 
   useEffect(() => {
     if (!groupRef.current) return;
@@ -152,7 +158,7 @@ export default function Pawn({ player, playerIndex, isActive }: PawnProps) {
 
     if (isActive) {
       const ty = getTilePosition(player.position)[1];
-      const baseY = ty + 0.32;
+      const baseY = ty + OIE_PAWN_Y_OFFSET;
       bobbingTween.current = gsap.to(groupRef.current.position, {
         y: baseY + 0.14,
         duration: 0.8,
@@ -165,31 +171,14 @@ export default function Pawn({ player, playerIndex, isActive }: PawnProps) {
     return () => {
       bobbingTween.current?.kill();
     };
-  }, [isActive, player.position]);
-
-  useFrame(({ clock }) => {
-    if (glowRef.current) {
-      const pulse = Math.sin(clock.getElapsedTime() * 3) * 0.15 + 0.5;
-      (glowRef.current.material as THREE.MeshBasicMaterial).opacity = isActive ? pulse : 0;
-    }
-  });
+  }, [isActive, player.position, OIE_PAWN_Y_OFFSET]);
 
   return (
     <group ref={groupRef}>
       <primitive object={pawnRoot} />
 
-      <mesh ref={glowRef} position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.2, 0.28, 32]} />
-        <meshBasicMaterial color={playerColor} transparent opacity={0} side={THREE.DoubleSide} />
-      </mesh>
-
-      <mesh position={[0, -0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.15, 16]} />
-        <meshBasicMaterial color="#0a0a0a" transparent opacity={0.25} />
-      </mesh>
-
       {player.panne && (
-        <group position={[0.18, 0.38, 0]} rotation={[0, 0, 0.3]}>
+        <group position={[0.22, 0.52, 0]} rotation={[0, 0, 0.3]}>
           <mesh rotation={[Math.PI / 2, 0, 0]}>
             <cylinderGeometry args={[0.025, 0.025, 0.1, 8]} />
             <meshStandardMaterial
