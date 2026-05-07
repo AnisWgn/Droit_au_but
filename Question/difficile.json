@@ -64,5 +64,137 @@
       "Le Royaume-Uni après le Brexit uniquement"
     ],
     "correctIndex": 0
+  },
+  {
+    "id": "d7",
+    "question": "En droit français, l'accès ou le maintien frauduleux dans un STAD (Système de traitement automatisé de données) est un délit. Si cette action entraîne une modification ou une suppression des données, à combien la peine maximale est-elle portée ?",
+    "choices": [
+      "1 an d'emprisonnement et 15 000 euros d'amende",
+      "2 ans d'emprisonnement et 30 000 euros d'amende",
+      "3 ans d'emprisonnement et 100 000 euros d'amende",
+      "5 ans d'emprisonnement et 300 000 euros d'amende"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "id": "d8",
+    "question": "En justice, pour prouver qu'un individu a commis le délit d'usurpation d'identité numérique (art. 226-4-1 du Code pénal), deux éléments précis doivent être démontrés. Lesquels ?",
+    "choices": [
+      "Un constat de la CNIL et un dépôt de plainte formel.",
+      "Un élément matériel (l'usage d'une donnée permettant d'identifier la victime) et un élément intentionnel (la volonté de troubler sa tranquillité ou son honneur).",
+      "Une perte de chiffre d'affaires et une indisponibilité d'un site web.",
+      "La faille de sécurité initiale et le vol du certificat électronique."
+    ],
+    "correctIndex": 1
+  },
+  {
+    "id": "d9",
+    "question": "Quel est le rôle principal de l'agence européenne « Eurojust » dans le cadre de la cybersécurité ?",
+    "choices": [
+      "Proposer la plateforme « No More Ransom » pour aider les victimes de rançongiciels.",
+      "Faciliter uniquement l'échange de renseignements entre les polices nationales.",
+      "Enquêter physiquement sur les cyberattaques touchant les institutions européennes.",
+      "Renforcer la coopération judiciaire et coordonner de manière optimale les actions d'enquêtes et de poursuites entre les États membres."
+    ],
+    "correctIndex": 3
+  },
+  {
+    "id": "d10",
+    "question": "Concernant la recevabilité de la preuve électronique, quelle est la valeur d'un échange de données informatisées où l'auteur est identifiable et l'intégrité assurée par un procédé fiable, mais qui ne possède « pas de signature apparente » ?",
+    "choices": [
+      "Il a exactement la même valeur absolue qu'un document certifié par l'État.",
+      "Il constitue un « début de preuve » si la loi exige un écrit parfait.",
+      "Il est considéré comme un simple e-mail ou SMS et ne garantit rien.",
+      "Il est irrecevable par nature en cas de litige commercial."
+    ],
+    "correctIndex": 1
+  },
+  {
+    "id": "d11",
+    "question": "Quelle entité est à l'initiative de la plateforme « No More Ransom », destinée à aider les victimes de rançongiciels à retrouver leurs données sans payer les criminels ?",
+    "choices": [
+      "Le FBI (Federal Bureau of Investigation)",
+      "Eurojust",
+      "La Brigade d'enquêtes sur les fraudes aux technologies de l'information (BEFTI)",
+      "Europol, via le Centre européen de lutte contre la cybercriminalité (EC3)"
+    ],
+    "correctIndex": 3
+  },
+  {
+    "id": "d12",
+    "question": "Quel procédé technique est utilisé spécifiquement pour garantir « l'intégrité » absolue d'une preuve électronique (c'est-à-dire s'assurer qu'elle n'a pas été modifiée) ?",
+    "choices": [
+      "L'attribution d'un nom de domaine internationalisé (IDN)",
+      "Le calcul d'empreintes électroniques via des algorithmes comme MD5 ou SHA",
+      "La collecte et l'analyse des métadonnées de géolocalisation",
+      "Le chiffrement exclusif avec une clé publique sans hachage"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "id": "d13",
+    "question": "D'après le Code pénal français (Article 313-1), quelle est la sanction maximale encourue pour une infraction qualifiée d'« Escroquerie » (telle que le phishing pour détourner des fonds) ?",
+    "choices": [
+      "Un an d'emprisonnement et 150 000 euros d'amende",
+      "Deux ans d'emprisonnement et 30 000 euros d'amende",
+      "Cinq ans d'emprisonnement et 375 000 euros d'amende",
+      "Cinq ans d'emprisonnement et 300 000 euros d'amende"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "id": "d14",
+    "question": "En quoi consiste l'acte malveillant de « cybersquatting » utilisé contre l'identité numérique d'une entreprise ?",
+    "choices": [
+      "À pirater le serveur de l'entreprise pour altérer l'apparence de son site web (défiguration).",
+      "À déposer un ou plusieurs noms de domaines identiques ou fortement similaires à l'une des marques de cette entreprise.",
+      "À utiliser un code malveillant pour chiffrer le disque de l'entreprise et demander une rançon.",
+      "À publier de faux avis pour porter atteinte aux produits ou services de l'entreprise (dénigrement)."
+    ],
+    "correctIndex": 1
+  },
+  {
+    "id": "d15",
+    "question": "Parmi les services français de lutte contre la cybercriminalité, lequel appartient à la gendarmerie nationale ?",
+    "choices": [
+      "La Sous-direction de lutte contre la cybercriminalité (SDLC)",
+      "La Brigade d'enquêtes sur les fraudes aux technologies de l'information (BEFTI)",
+      "Le Centre européen de lutte contre la cybercriminalité (EC3)",
+      "Le Centre de lutte contre les criminalités numériques (C3N)"
+    ],
+    "correctIndex": 3
+  },
+  {
+    "id": "d16",
+    "question": "Quelle est la différence juridique majeure entre la diffamation et le dénigrement sur Internet ?",
+    "choices": [
+      "La diffamation vise à porter atteinte à l'image d'une personne ou entreprise, tandis que le dénigrement attaque les produits ou services pour impacter la clientèle.",
+      "La diffamation est un délit pénal puni de prison, alors que le dénigrement n'entraîne qu'un simple rappel à la loi.",
+      "La diffamation s'applique uniquement si l'organisation est nommée explicitement, ce qui n'est pas le cas pour le dénigrement.",
+      "Le délai d'action pour la diffamation est de 5 ans, contre 3 mois pour le dénigrement."
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": "d17",
+    "question": "Quelles sont les trois composantes qui constituent l'identité numérique d'une organisation sur le Web ?",
+    "choices": [
+      "L'identité publique, l'identité privée et l'identité mixte",
+      "L'identité déclarative, l'identité agissante et l'identité calculée",
+      "L'identité commerciale, l'identité juridique et l'identité numérique",
+      "L'e-réputation, la notoriété et l'usurpation"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "id": "d18",
+    "question": "En matière de sécurité des données (RGPD), que risque un responsable de traitement qui ne respecte pas ses obligations de notification et de protection ?",
+    "choices": [
+      "Une amende pénale forfaitaire de 150 000 euros",
+      "L'interdiction d'utiliser des systèmes de traitement automatisé de données (STAD) pendant 5 ans",
+      "Des amendes administratives pouvant atteindre 10 millions d'euros ou 2 % du chiffre d'affaires annuel mondial",
+      "Aucune sanction financière si l'entreprise parvient à prouver qu'elle a été victime de pirates externes"
+    ],
+    "correctIndex": 2
   }
 ]

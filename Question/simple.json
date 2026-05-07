@@ -64,5 +64,104 @@
       "Réduire la taille des fichiers image"
     ],
     "correctIndex": 0
+  },
+  {
+    "id": "s7",
+    "question": "Selon l'étude du CESIN, quelle proportion d'entreprises a constaté au moins une cyber-attaque en 2020 ?",
+    "choices": [
+      "Près de 2 sur 10",
+      "Près de 4 sur 10",
+      "Près de 6 sur 10",
+      "Près de 9 sur 10"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "id": "s8",
+    "question": "Parmi les trois composantes de l'identité numérique d'une organisation, qu'appelle-t-on « l'identité agissante » ?",
+    "choices": [
+      "Les données que l'entreprise choisit volontairement de publier sur son site.",
+      "Les métadonnées et les traces laissées par l'organisation lors de ses navigations sur le Web (cookies, IP, etc.).",
+      "L'extrapolation des comportements futurs calculée par des algorithmes.",
+      "L'enregistrement officiel de la dénomination sociale au registre du commerce."
+    ],
+    "correctIndex": 1
+  },
+  {
+    "id": "s9",
+    "question": "Dans le Code civil, quel article protège fondamentalement les individus contre les atteintes à la vie privée, notamment en ce qui concerne le droit à l'image ?",
+    "choices": [
+      "L'article 1316",
+      "L'article 323-1",
+      "L'article 9",
+      "L'article 226-4-1"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "id": "s10",
+    "question": "D'après l'étude du CESIN, quel est l'impact sur le business le plus fréquemment cité par les entreprises victimes de cyberattaques (27 %) ?",
+    "choices": [
+      "La perte d'image et l'impact médiatique",
+      "L'indisponibilité du site web pendant une période significative",
+      "La perturbation de la production pendant une période significative",
+      "Le retard sur la livraison auprès des clients"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "id": "s11",
+    "question": "Comment s'appelle l'escroquerie qui consiste à se faire passer pour le dirigeant d'une entreprise afin d'obtenir un virement bancaire urgent ?",
+    "choices": [
+      "Le hameçonnage (phishing)",
+      "L'arnaque aux faux supports techniques",
+      "La fraude au président",
+      "Le dénigrement numérique"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "id": "s12",
+    "question": "Lequel de ces éléments permet l'identification juridique stricte d'une « personne morale » (comme une société) ?",
+    "choices": [
+      "Son adresse IP publique",
+      "Sa dénomination ou raison sociale",
+      "Le nom patronymique de son fondateur",
+      "Son empreinte numérique (cookies)"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "id": "s13",
+    "question": "Selon le RGPD, de quel délai dispose un organisme pour notifier la CNIL après la découverte d'une violation de données personnelles ?",
+    "choices": [
+      "24 heures",
+      "48 heures",
+      "72 heures",
+      "7 jours"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "id": "s14",
+    "question": "Comment une personne physique acquiert-elle la personnalité juridique en droit français ?",
+    "choices": [
+      "À sa majorité (18 ans)",
+      "Dès sa naissance",
+      "Lors de la création de sa première adresse e-mail",
+      "Lors de son inscription au registre du commerce"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "id": "s15",
+    "question": "Lors d'un échange avec signature électronique, à quoi sert la clé privée de l'auteur ?",
+    "choices": [
+      "À créer la signature électronique attachée au document",
+      "À vérifier l'identité de l'expéditeur à la réception",
+      "À délivrer le certificat d'authentification",
+      "À calculer l'empreinte électronique MD5"
+    ],
+    "correctIndex": 0
   }
 ]

@@ -1,43 +1,28 @@
 {
   "components\\GameBoard.tsx -> ./three/Scene": {
-    "id": 2602,
+    "id": "components\\GameBoard.tsx -> ./three/Scene",
     "files": [
-      "static/chunks/b536a0f1.dabd8a58b743f436.js",
-      "static/chunks/51749ec1.0b60a85b60c6b989.js",
-      "static/chunks/0f8af13e.b1660ebbdb8d7452.js",
-      "static/chunks/c15bf2b0.0817d25de15f5a65.js",
-      "static/chunks/830.bfd731377bce0d4c.js",
-      "static/chunks/366.df7b07c91120e639.js",
-      "static/chunks/602.a3e6229a47bd3778.js"
+      "static/chunks/_app-pages-browser_components_three_Scene_tsx.js"
     ]
   },
   "components\\games\\ChessGame.tsx -> @/components/three/chess/ChessScene": {
-    "id": 881,
+    "id": "components\\games\\ChessGame.tsx -> @/components/three/chess/ChessScene",
     "files": [
-      "static/chunks/b536a0f1.dabd8a58b743f436.js",
-      "static/chunks/51749ec1.0b60a85b60c6b989.js",
-      "static/chunks/830.bfd731377bce0d4c.js",
-      "static/chunks/881.c6a1a252943939c7.js"
+      "static/chunks/_app-pages-browser_components_three_chess_ChessScene_tsx.js"
     ]
   },
   "node_modules\\@react-three\\drei\\core\\VideoTexture.js -> hls.js": {
-    "id": null,
+    "id": "node_modules\\@react-three\\drei\\core\\VideoTexture.js -> hls.js",
     "files": []
   },
   "node_modules\\@react-three\\drei\\web\\FaceLandmarker.js -> @mediapipe/tasks-vision": {
-    "id": null,
+    "id": "node_modules\\@react-three\\drei\\web\\FaceLandmarker.js -> @mediapipe/tasks-vision",
     "files": []
   },
-  "node_modules\\next\\dist\\client\\index.js -> ../pages/_app": {
-    "id": 1966,
+  "node_modules\\next\\dist\\client\\dev\\hot-reloader\\app\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts": {
+    "id": "node_modules\\next\\dist\\client\\dev\\hot-reloader\\app\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts",
     "files": [
-      "static/chunks/966.1775eb621d8d3e09.js"
-    ]
-  },
-  "node_modules\\next\\dist\\client\\index.js -> ../pages/_error": {
-    "id": 3899,
-    "files": [
-      "static/chunks/899.1813981119fa1f8a.js"
+      "static/chunks/_app-pages-browser_node_modules_next_dist_client_dev_noop-turbopack-hmr_js.js"
     ]
   }
 }

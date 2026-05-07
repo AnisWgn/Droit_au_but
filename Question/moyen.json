@@ -64,5 +64,104 @@
       "Uniquement la CNIL"
     ],
     "correctIndex": 0
+  },
+  {
+    "id": "m7",
+    "question": "Dans le fonctionnement d'une signature électronique basée sur la cryptographie asymétrique, quel est le rôle exclusif de la « clé publique » ?",
+    "choices": [
+      "À créer la signature initiale lors de la rédaction du document.",
+      "À chiffrer les données sensibles sur le poste de l'expéditeur.",
+      "À permettre au récepteur de vérifier la signature électronique et l'identité de l'auteur.",
+      "À calculer l'empreinte électronique pour s'assurer qu'aucun piratage n'a eu lieu."
+    ],
+    "correctIndex": 2
+  },
+  {
+    "id": "m8",
+    "question": "Quelle est l'unité de la préfecture de police (créée en 1994) dont la mission essentielle est de lutter contre les atteintes aux systèmes de traitement automatisé de données (STAD) en région parisienne ?",
+    "choices": [
+      "La Sous-direction de lutte contre la cybercriminalité (SDLC)",
+      "Le Centre de lutte contre les criminalités numériques (C3N)",
+      "La Brigade d'enquêtes sur les fraudes aux technologies de l'information (BEFTI)",
+      "Europol (EC3)"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "id": "m9",
+    "question": "Selon le RGPD, afin de justifier de leur politique de sécurité interne, que doivent obligatoirement documenter les entreprises dans leur « cahier des incidents » ?",
+    "choices": [
+      "La liste complète des adresses IP des pirates informatiques.",
+      "La nature de la violation, les conséquences probables et les mesures prises pour l'atténuer.",
+      "Les clés privées utilisées lors de l'attaque.",
+      "Le montant exact des rançons demandées par les pirates."
+    ],
+    "correctIndex": 1
+  },
+  {
+    "id": "m10",
+    "question": "Quelle est la valeur juridique d'un courriel ou d'un SMS (non signé numériquement) lorsque la loi exige un « écrit parfait » ?",
+    "choices": [
+      "Il est considéré comme une preuve électronique authentique",
+      "Il n'a absolument aucune valeur juridique devant un tribunal",
+      "Il est considéré comme un simple début de preuve",
+      "Il a la même valeur qu'un document certifié par un organisme d'État"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "id": "m11",
+    "question": "Lorsqu'un utilisateur, victime d'une fuite de données, intente un « recours civil » contre une organisation, que doit-il impérativement pouvoir prouver ?",
+    "choices": [
+      "La volonté explicite de nuire du responsable de traitement",
+      "Le préjudice qu'il a subi",
+      "Le nom du pirate informatique à l'origine de l'attaque",
+      "Le non-respect du délai de 72 h par la CNIL"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "id": "m12",
+    "question": "Le calcul du « risque acceptable » pour sécuriser le système d'information d'une entreprise s'appuie souvent sur une analyse méthodologique. Quelle méthode est explicitement citée en exemple dans le cours ?",
+    "choices": [
+      "La méthode EBIOS",
+      "La méthode LOPPSI",
+      "La méthode SHA",
+      "Le processus RGPD"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": "m13",
+    "question": "Quelle loi française a introduit la notion de système de traitement automatisé de données (STAD) ?",
+    "choices": [
+      "La loi Godfrain du 5 janvier 1988",
+      "La loi pour la confiance dans l'économie numérique (LCEN) de 2004",
+      "La loi Informatique et libertés du 6 janvier 1978",
+      "La convention sur la cybercriminalité de 2001"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "id": "m14",
+    "question": "D'après l'article 226-4-1 du Code pénal introduit par la loi Loppsi 2, quelle est la sanction prévue pour le délit spécifique d'usurpation d'identité en ligne ?",
+    "choices": [
+      "Un an d'emprisonnement et 15 000 euros d'amende",
+      "Deux ans d'emprisonnement et 30 000 euros d'amende",
+      "Cinq ans d'emprisonnement et 300 000 euros d'amende",
+      "Cinq ans d'emprisonnement et 75 000 euros d'amende"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": "m15",
+    "question": "Quelles sont les deux conditions fondamentales imposées par l'article 1316 du Code civil pour qu'une preuve électronique soit recevable ?",
+    "choices": [
+      "La présence d'un nom de domaine certifié et d'une adresse IP publique",
+      "L'envoi par un canal chiffré et la réception d'un accusé de lecture",
+      "L'authentification de la personne à l'origine de l'acte et la garantie de l'intégrité du document",
+      "La présence d'une signature manuscrite numérisée et l'accord de la CNIL"
+    ],
+    "correctIndex": 2
   }
 ]
